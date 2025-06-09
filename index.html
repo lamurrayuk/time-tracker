@@ -673,7 +673,7 @@ function saveManualEntry() {
         return;
     }
     
-    const durationInput = prompt('Enter duration in minutes (e.g. 30, 60, 120):');
+    const durationInput = prompt('Enter duration in hours (e.g. 1, 1.5, 2):');
     if (!durationInput) return;
     
     const hours = parseFloat(durationInput);
