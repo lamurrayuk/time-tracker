@@ -436,7 +436,7 @@
             </div>
             
             <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; font-size: 14px;">
-                <strong>📝 Note:</strong> This uses a simple CSV export method. Your data will be exported as CSV format to your Google Sheet. Make sure your sheet is shared as "Editor" (not just Viewer) for this to work.
+                <strong>📝 Note:</strong> This will automatically add your time entries directly to your Google Sheet. Make sure your sheet is shared as "Editor" (not just Viewer) for this to work.
             </div>
         </div>
 
@@ -453,13 +453,18 @@
                 <div class="form-group">
                     <label for="taskCategory">Task Category</label>
                     <select id="taskCategory">
-                        <option value="Client Work">Client Work</option>
-                        <option value="Internal">Internal</option>
-                        <option value="Admin">Admin</option>
+                        <option value="Project Work - Billable">Project Work - Billable</option>
                         <option value="Business Development">Business Development</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Mentoring / Coaching">Mentoring / Coaching</option>
+                        <option value="Non-Billable: Other">Non-Billable: Other</option>
+                        <option value="Performance Partnering">Performance Partnering</option>
+                        <option value="Practice Development">Practice Development</option>
+                        <option value="Practice Meetings">Practice Meetings</option>
+                        <option value="Recruitment">Recruitment</option>
+                        <option value="Regional Team Meetings">Regional Team Meetings</option>
                         <option value="Training">Training</option>
-                        <option value="Meeting">Meeting</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -787,8 +792,9 @@ function unlinkGoogleSheets() {
 
 function syncToGoogleSheets() {
     const sheetId = getItem('googleSheetId');
+    const sheetUrl = getItem('googleSheetUrl');
     
-    if (!sheetId) {
+    if (!sheetId || !sheetUrl) {
         alert('Please connect to Google Sheets first');
         return;
     }
@@ -799,44 +805,75 @@ function syncToGoogleSheets() {
         return;
     }
     
-    // Create CSV data
-    let csvContent = 'Date,Category,Project/Client,Description,Duration\n';
+    // Create CSV data for Google Sheets import
+    let csvData = 'Date,Category,Project/Client,Description,Duration\n';
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
         const date = new Date(entry.date).toLocaleString();
         const category = entry.category;
-        const project = '"' + entry.project.replace(/"/g, '""') + '"'; // Escape quotes
+        const project = '"' + entry.project.replace(/"/g, '""') + '"';
         const description = '"' + (entry.description || '').replace(/"/g, '""') + '"';
         const duration = entry.formattedDuration;
         
-        csvContent += date + ',' + category + ',' + project + ',' + description + ',' + duration + '\n';
+        csvData += date + ',' + category + ',' + project + ',' + description + ',' + duration + '\n';
     }
     
-    // Create downloadable CSV
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'time-entries-' + new Date().toISOString().split('T')[0] + '.csv';
+    // Convert sheet URL to form submission URL
+    let formUrl = '';
     
-    // Show instructions to user
-    const instructions = 'CSV file will be downloaded. To add to your Google Sheet:\n\n' +
-                        '1. Open your Google Sheet\n' +
-                        '2. Go to File → Import\n' +
-                        '3. Choose "Upload" tab\n' +
-                        '4. Select the downloaded CSV file\n' +
-                        '5. Choose "Replace spreadsheet" or "Insert new sheet"\n' +
-                        '6. Click "Import data"\n\n' +
-                        'Click OK to download the CSV file now.';
+    // Extract the sheet ID and create the form URL
+    if (sheetUrl.includes('/edit')) {
+        formUrl = sheetUrl.replace('/edit', '/exec');
+    } else {
+        formUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/exec';
+    }
     
-    if (confirm(instructions)) {
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+    // Try to submit data directly to the sheet
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = formUrl;
+    form.target = '_blank';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = csvData;
+    
+    form.appendChild(input);
+    document.body.appendChild(form);
+    
+    try {
+        form.submit();
+        alert('✅ Data sent to Google Sheets! Check your sheet to see the entries.');
+    } catch (error) {
+        console.error('Direct submission failed:', error);
         
-        alert('✅ CSV downloaded! Import it into your Google Sheet following the instructions.');
+        // Fallback: Open the sheet and show instructions
+        window.open(sheetUrl, '_blank');
+        
+        // Create downloadable CSV as backup
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'time-entries-' + new Date().toISOString().split('T')[0] + '.csv';
+        
+        const fallbackInstructions = 'Direct sync failed. Your Google Sheet will open in a new tab.\n\n' +
+                                    'Backup option: A CSV file will also download. To import:\n' +
+                                    '1. In your Google Sheet: File → Import\n' +
+                                    '2. Upload the CSV file\n' +
+                                    '3. Choose "Replace spreadsheet"\n\n' +
+                                    'Click OK to proceed.';
+        
+        if (confirm(fallbackInstructions)) {
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
     }
+    
+    document.body.removeChild(form);
 }
 
 function checkGoogleSheetsStatus() {
