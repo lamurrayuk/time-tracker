@@ -417,9 +417,42 @@
             <p><strong>Easy Setup:</strong></p>
             <ol>
                 <li>Create a new Google Sheet</li>
-                <li>Share it publicly: Share → "Anyone with the link" → <strong>Editor</strong> (not just Viewer)</li>
-                <li>Copy the complete URL from your browser</li>
-                <li>Paste it below and click Connect</li>
+                <li>Go to <strong>Extensions → Apps Script</strong> in your Google Sheet</li>
+                <li>Delete any existing code and paste this script:</li>
+            </ol>
+            
+            <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 6px; margin: 15px 0; font-family: monospace; font-size: 12px; overflow-x: auto;">
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const data = JSON.parse(e.postData.contents);
+  
+  // Clear existing data
+  sheet.clear();
+  
+  // Add headers
+  const headers = ['Date', 'Category', 'Project/Client', 'Description', 'Duration'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  // Add data
+  if (data.entries && data.entries.length > 0) {
+    const rows = data.entries.map(entry => [
+      new Date(entry.date).toLocaleString(),
+      entry.category,
+      entry.project,
+      entry.description || '',
+      entry.formattedDuration
+    ]);
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  
+  return ContentService.createTextOutput('Success');
+}
+            </div>
+            
+            <ol start="4">
+                <li>Click <strong>Save</strong>, then <strong>Deploy → New Deployment</strong></li>
+                <li>Choose "Web app", set access to "Anyone", click <strong>Deploy</strong></li>
+                <li>Copy the <strong>Web app URL</strong> and paste it below</li>
             </ol>
             
             <div class="sync-status" id="syncStatus">
@@ -427,7 +460,7 @@
             </div>
             
             <div style="margin-top: 15px; margin-bottom: 15px;">
-                <input type="text" id="sheetUrlInput" placeholder="Paste your Google Sheets URL here" style="width: 70%; margin-right: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 4px;">
+                <input type="text" id="sheetUrlInput" placeholder="Paste your Google Apps Script Web app URL here" style="width: 70%; margin-right: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 4px;">
                 <button id="setupBtn" onclick="setupGoogleSheets()" style="background: #4caf50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Connect</button>
             </div>
             
@@ -435,8 +468,8 @@
                 <button id="unlinkBtn" onclick="unlinkGoogleSheets()" style="display: none; background: #f44336; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Unlink Sheets</button>
             </div>
             
-            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; font-size: 14px;">
-                <strong>📝 Note:</strong> This will automatically add your time entries directly to your Google Sheet. Make sure your sheet is shared as "Editor" (not just Viewer) for this to work.
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; font-size: 14px;">
+                <strong>✅ Note:</strong> This will automatically sync your time entries directly to your Google Sheet in real-time with no downloads or manual imports required.
             </div>
         </div>
 
@@ -733,52 +766,52 @@ function clearAllEntries() {
 }
 
 function setupGoogleSheets() {
-    const sheetUrl = document.getElementById('sheetUrlInput').value.trim();
-    if (!sheetUrl) {
-        alert('Please paste your Google Sheets URL first');
+    const webAppUrl = document.getElementById('sheetUrlInput').value.trim();
+    if (!webAppUrl) {
+        alert('Please paste your Google Apps Script Web app URL first');
         return;
     }
     
-    let sheetId = '';
-    const patterns = [
-        /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
-        /\/spreadsheets\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/,
-        /key=([a-zA-Z0-9-_]+)/,
-        /spreadsheet\/ccc\?key=([a-zA-Z0-9-_]+)/
-    ];
+    if (!webAppUrl.includes('script.google.com') || !webAppUrl.includes('/exec')) {
+        alert('Please make sure you paste the Web app URL (should contain script.google.com and end with /exec)');
+        return;
+    }
     
-    for (let i = 0; i < patterns.length; i++) {
-        const match = sheetUrl.match(patterns[i]);
-        if (match) {
-            sheetId = match[1];
-            break;
+    // Test the connection with a simple ping
+    fetch(webAppUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ test: true })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Store the web app URL
+            setItem('googleWebAppUrl', webAppUrl);
+            
+            document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
+            document.getElementById('setupBtn').style.display = 'none';
+            document.getElementById('unlinkBtn').style.display = 'inline-block';
+            document.getElementById('sheetUrlInput').style.display = 'none';
+            
+            alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet.');
+            
+            // Auto-sync existing entries
+            syncToGoogleSheets();
+        } else {
+            throw new Error('Connection failed');
         }
-    }
-    
-    if (!sheetId) {
-        alert('Could not extract Sheet ID from URL. Please make sure you copied the full Google Sheets URL.\n\nExample: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit');
-        return;
-    }
-    
-    // Store the sheet info
-    setItem('googleSheetId', sheetId);
-    setItem('googleSheetUrl', sheetUrl);
-    
-    document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-    document.getElementById('setupBtn').style.display = 'none';
-    document.getElementById('unlinkBtn').style.display = 'inline-block';
-    document.getElementById('sheetUrlInput').style.display = 'none';
-    
-    alert('✅ Connected to Google Sheets!\n\nYour time entries will be exported as CSV data to your sheet when you click "Sync to Sheets".');
-    
-    // Auto-sync existing entries
-    syncToGoogleSheets();
+    })
+    .catch(error => {
+        console.error('Setup failed:', error);
+        alert('❌ Connection failed. Please check:\n\n1. You deployed the Apps Script as a web app\n2. Access is set to "Anyone"\n3. You copied the correct Web app URL\n4. The URL ends with /exec');
+    });
 }
 
 function unlinkGoogleSheets() {
     if (confirm('Are you sure you want to unlink Google Sheets? This will not delete your existing data.')) {
-        removeItem('googleSheetId');
-        removeItem('googleSheetUrl');
+        removeItem('googleWebAppUrl');
         
         document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
         document.getElementById('setupBtn').style.display = 'inline-block';
@@ -791,10 +824,9 @@ function unlinkGoogleSheets() {
 }
 
 function syncToGoogleSheets() {
-    const sheetId = getItem('googleSheetId');
-    const sheetUrl = getItem('googleSheetUrl');
+    const webAppUrl = getItem('googleWebAppUrl');
     
-    if (!sheetId || !sheetUrl) {
+    if (!webAppUrl) {
         alert('Please connect to Google Sheets first');
         return;
     }
@@ -805,81 +837,33 @@ function syncToGoogleSheets() {
         return;
     }
     
-    // Create CSV data for Google Sheets import
-    let csvData = 'Date,Category,Project/Client,Description,Duration\n';
-    for (let i = 0; i < entries.length; i++) {
-        const entry = entries[i];
-        const date = new Date(entry.date).toLocaleString();
-        const category = entry.category;
-        const project = '"' + entry.project.replace(/"/g, '""') + '"';
-        const description = '"' + (entry.description || '').replace(/"/g, '""') + '"';
-        const duration = entry.formattedDuration;
-        
-        csvData += date + ',' + category + ',' + project + ',' + description + ',' + duration + '\n';
-    }
-    
-    // Convert sheet URL to form submission URL
-    let formUrl = '';
-    
-    // Extract the sheet ID and create the form URL
-    if (sheetUrl.includes('/edit')) {
-        formUrl = sheetUrl.replace('/edit', '/exec');
-    } else {
-        formUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/exec';
-    }
-    
-    // Try to submit data directly to the sheet
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = formUrl;
-    form.target = '_blank';
-    
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'data';
-    input.value = csvData;
-    
-    form.appendChild(input);
-    document.body.appendChild(form);
-    
-    try {
-        form.submit();
-        alert('✅ Data sent to Google Sheets! Check your sheet to see the entries.');
-    } catch (error) {
-        console.error('Direct submission failed:', error);
-        
-        // Fallback: Open the sheet and show instructions
-        window.open(sheetUrl, '_blank');
-        
-        // Create downloadable CSV as backup
-        const blob = new Blob([csvData], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'time-entries-' + new Date().toISOString().split('T')[0] + '.csv';
-        
-        const fallbackInstructions = 'Direct sync failed. Your Google Sheet will open in a new tab.\n\n' +
-                                    'Backup option: A CSV file will also download. To import:\n' +
-                                    '1. In your Google Sheet: File → Import\n' +
-                                    '2. Upload the CSV file\n' +
-                                    '3. Choose "Replace spreadsheet"\n\n' +
-                                    'Click OK to proceed.';
-        
-        if (confirm(fallbackInstructions)) {
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+    // Send data to Google Apps Script
+    fetch(webAppUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            entries: entries
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('✅ Successfully synced ' + entries.length + ' entries to Google Sheets!');
+        } else {
+            throw new Error('Sync failed with status: ' + response.status);
         }
-    }
-    
-    document.body.removeChild(form);
+    })
+    .catch(error => {
+        console.error('Sync failed:', error);
+        alert('❌ Sync failed: ' + error.message + '\n\nPlease check your Google Apps Script setup and try again.');
+    });
 }
 
 function checkGoogleSheetsStatus() {
-    const sheetId = getItem('googleSheetId');
+    const webAppUrl = getItem('googleWebAppUrl');
     
-    if (sheetId) {
+    if (webAppUrl) {
         document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
         document.getElementById('setupBtn').style.display = 'none';
         document.getElementById('unlinkBtn').style.display = 'inline-block';
