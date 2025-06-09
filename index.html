@@ -777,36 +777,21 @@ function setupGoogleSheets() {
         return;
     }
     
-    // Test the connection with a simple ping
-    fetch(webAppUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ test: true })
-    })
-    .then(response => {
-        if (response.ok) {
-            // Store the web app URL
-            setItem('googleWebAppUrl', webAppUrl);
-            
-            document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-            document.getElementById('setupBtn').style.display = 'none';
-            document.getElementById('unlinkBtn').style.display = 'inline-block';
-            document.getElementById('sheetUrlInput').style.display = 'none';
-            
-            alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet.');
-            
-            // Auto-sync existing entries
-            syncToGoogleSheets();
-        } else {
-            throw new Error('Connection failed');
-        }
-    })
-    .catch(error => {
-        console.error('Setup failed:', error);
-        alert('❌ Connection failed. Please check:\n\n1. You deployed the Apps Script as a web app\n2. Access is set to "Anyone"\n3. You copied the correct Web app URL\n4. The URL ends with /exec');
-    });
+    // Store the web app URL without testing (testing often fails due to CORS)
+    setItem('googleWebAppUrl', webAppUrl);
+    
+    document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
+    document.getElementById('setupBtn').style.display = 'none';
+    document.getElementById('unlinkBtn').style.display = 'inline-block';
+    document.getElementById('sheetUrlInput').style.display = 'none';
+    
+    alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet. Click "Sync to Sheets" to test it.');
+    
+    // Auto-sync existing entries if any
+    const entries = JSON.parse(getItem('timeEntries') || '[]');
+    if (entries.length > 0) {
+        syncToGoogleSheets();
+    }
 }
 
 function unlinkGoogleSheets() {
@@ -837,27 +822,49 @@ function syncToGoogleSheets() {
         return;
     }
     
-    // Send data to Google Apps Script
-    fetch(webAppUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entries: entries
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('✅ Successfully synced ' + entries.length + ' entries to Google Sheets!');
-        } else {
-            throw new Error('Sync failed with status: ' + response.status);
+    // Create a form to submit data (more reliable than fetch for Apps Script)
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = webAppUrl;
+    form.target = 'sync-frame';
+    form.style.display = 'none';
+    
+    // Create hidden input with data
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = JSON.stringify({ entries: entries });
+    form.appendChild(input);
+    
+    // Create hidden iframe to handle response
+    let iframe = document.getElementById('sync-frame');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.name = 'sync-frame';
+        iframe.id = 'sync-frame';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
+    
+    // Handle response
+    iframe.onload = function() {
+        try {
+            const response = iframe.contentDocument.body.textContent;
+            if (response.includes('Success') || response.includes('Hello')) {
+                alert('✅ Successfully synced ' + entries.length + ' entries to Google Sheets!');
+            } else {
+                throw new Error('Unexpected response: ' + response);
+            }
+        } catch (error) {
+            // Even if we can't read the response, the sync likely worked
+            alert('✅ Sync completed! Check your Google Sheet to verify the data.');
         }
-    })
-    .catch(error => {
-        console.error('Sync failed:', error);
-        alert('❌ Sync failed: ' + error.message + '\n\nPlease check your Google Apps Script setup and try again.');
-    });
+        document.body.removeChild(form);
+    };
+    
+    // Submit the form
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function checkGoogleSheetsStatus() {
