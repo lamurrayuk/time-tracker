@@ -676,13 +676,13 @@ function saveManualEntry() {
     const durationInput = prompt('Enter duration in minutes (e.g. 30, 60, 120):');
     if (!durationInput) return;
     
-    const minutes = parseInt(durationInput);
-    if (isNaN(minutes) || minutes <= 0) {
-        alert('Please enter a valid number of minutes');
+    const hours = parseFloat(durationInput);
+    if (isNaN(hours) || hours <= 0) {
+        alert('Please enter a valid number of hours');
         return;
     }
     
-    const duration = minutes * 60 * 1000;
+    const duration = hours * 60 * 60 * 1000; // Convert hours to milliseconds
     
     const entry = {
         id: Date.now(),
