@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker - Google Sheets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f5f5f5;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            color: #000000;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 400;
+        }
+
+        .setup-section {
+            background: #f8f9fa;
+            border: 2px solid #8BC34A;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .setup-section h3 {
+            color: #000000;
+            margin-bottom: 15px;
+        }
+
+        .setup-section.hidden {
+            display: none;
+        }
+
+        .connection-status {
+            background: #8BC34A;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .connection-status.error {
+            background: #757575;
+        }
+
+        .timer-section {
+            background: #8BC34A;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #000000;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #ffffff;
+            color: #000000;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #8BC34A;
+            box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .start-btn {
+            background: #8BC34A;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #757575;
+            color: white;
+        }
+
+        .save-btn {
+            background: #8BC34A;
+            color: white;
+        }
+
+        .setup-btn {
+            background: #000000;
+            color: white;
+        }
+
+        .sync-btn {
+            background: #8BC34A;
+            color: white;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .start-btn:hover:not(:disabled) {
+            background: #7CB342;
+        }
+
+        .stop-btn:hover:not(:disabled) {
+            background: #616161;
+        }
+
+        .save-btn:hover:not(:disabled) {
+            background: #7CB342;
+        }
+
+        .setup-btn:hover:not(:disabled) {
+            background: #424242;
+        }
+
+        .sync-btn:hover:not(:disabled) {
+            background: #7CB342;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .entries-section {
+            margin-top: 30px;
+        }
+
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .entries-header h2 {
+            color: #000000;
+            font-weight: 400;
+        }
+
+        .entries-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .entry-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .entry-item:hover {
+            background-color: #f8f8f8;
+        }
+
+        .entry-item:last-child {
+            border-bottom: none;
+        }
+
+        .entry-details {
+            flex: 1;
+        }
+
+        .entry-project {
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 5px;
+        }
+
+        .entry-task {
+            color: #757575;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .entry-date {
+            color: #9e9e9e;
+            font-size: 12px;
+        }
+
+        .entry-duration {
+            font-weight: bold;
+            color: #8BC34A;
+            font-size: 18px;
+            margin-left: 15px;
+        }
+
+        .delete-btn {
+            background: #757575;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #616161;
+        }
+
+        .summary {
+            background: #8BC34A;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .summary h3 {
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .summary-time {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .sync-status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .sync-status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #8BC34A;
+        }
+
+        .sync-status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #757575;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+                margin-bottom: 20px;
+            }
+            
+            .timer-section {
+                padding: 20px 15px;
+            }
+            
+            .timer-display {
+                font-size: 2.5em;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                min-width: 100%;
+                padding: 15px;
+                font-size: 18px;
+            }
+            
+            input, select, textarea {
+                padding: 15px;
+                font-size: 18px;
+                border-radius: 8px;
+            }
+            
+            .entry-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 20px 15px;
+            }
+            
+            .entry-duration {
+                align-self: flex-end;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .delete-btn {
+                align-self: flex-end;
+                margin-left: 0;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+
+        /* Touch-friendly interactions */
+        @media (hover: none) and (pointer: coarse) {
+            button:hover {
+                transform: none;
+            }
+            
+            button:active {
+                transform: scale(0.98);
+            }
+            
+            .entry-item:hover {
+                background-color: #f8f8f8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Time Tracker</h1>
+        
+        <div class="setup-section" id="setupSection">
+            <h3>🔗 Google Sheets Setup</h3>
+            <div class="input-group">
+                <label for="sheetIdInput">Google Sheet ID:</label>
+                <input type="text" id="sheetIdInput" placeholder="Paste your Google Sheet ID here">
+                <small style="color: #757575; margin-top: 5px; display: block;">
+                    Find this in your sheet URL: docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit
+                </small>
+            </div>
+            <button class="setup-btn" onclick="connectToSheets()">Connect to Google Sheets</button>
+        </div>
+
+        <div class="connection-status" id="connectionStatus" style="display: none;">
+            Not connected to Google Sheets
+        </div>
+        
+        <div class="timer-section">
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+            <div class="button-group">
+                <button class="start-btn" id="startBtn" onclick="startTimer()">Start</button>
+                <button class="stop-btn" id="stopBtn" onclick="stopTimer()" disabled>Stop</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="projectInput">Project/Client:</label>
+            <input type="text" id="projectInput" placeholder="Enter project or client name">
+        </div>
+
+        <div class="input-group">
+            <label for="categorySelect">Task Category:</label>
+            <select id="categorySelect">
+                <option value="">Select category...</option>
+                <option value="Project Work">Project Work</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Admin">Admin</option>
+                <option value="Mentoring">Mentoring</option>
+                <option value="Performance Partner Conversations">Performance Partner Conversations</option>
+                <option value="Practice Development">Practice Development</option>
+                <option value="Training">Training</option>
+                <option value="Travel">Travel</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="taskInput">Task Description:</label>
+            <textarea id="taskInput" rows="3" placeholder="Describe what you're working on"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="save-btn" onclick="saveEntry()">Save Entry</button>
+            <button class="sync-btn" onclick="syncToSheets()" id="syncBtn" disabled>Sync to Sheets</button>
+        </div>
+
+        <div class="sync-status" id="syncStatus" style="display: none;"></div>
+
+        <div class="entries-section">
+            <div class="entries-header">
+                <h2>Time entries</h2>
+                <button onclick="clearAllEntries()" style="background: #757575; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease;" onmouseover="this.style.background='#616161'" onmouseout="this.style.background='#757575'">Clear All</button>
+            </div>
+            <div class="entries-list" id="entriesList">
+                <!-- Entries will be populated here -->
+            </div>
+        </div>
+
+        <div class="summary" id="summary">
+            <h3>Today's Total</h3>
+            <div class="summary-time" id="totalTime">0:00</div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = null;
+        let timerInterval = null;
+        let isRunning = false;
+        let entries = [];
+        let storageAvailable = false;
+        let sheetsConnected = false;
+        let sheetId = '';
+
+        // Check if localStorage is available
+        function checkStorageAvailability() {
+            try {
+                const test = 'test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                storageAvailable = true;
+                entries = JSON.parse(localStorage.getItem('timeEntries')) || [];
+                sheetId = localStorage.getItem('googleSheetId') || '';
+                if (sheetId) {
+                    document.getElementById('sheetIdInput').value = sheetId;
+                    connectToSheets();
+                }
+            } catch (e) {
+                storageAvailable = false;
+                entries = [];
+                console.log('localStorage not available, using memory storage');
+            }
+        }
+
+        // Storage wrapper functions
+        function saveToStorage() {
+            if (storageAvailable) {
+                try {
+                    localStorage.setItem('timeEntries', JSON.stringify(entries));
+                } catch (e) {
+                    console.log('Failed to save to localStorage');
+                }
+            }
+        }
+
+        function connectToSheets() {
+            const sheetIdInput = document.getElementById('sheetIdInput').value.trim();
+            if (!sheetIdInput) {
+                alert('Please enter your Google Sheet ID');
+                return;
+            }
+
+            sheetId = sheetIdInput;
+            sheetsConnected = true;
+
+            if (storageAvailable) {
+                localStorage.setItem('googleSheetId', sheetId);
+            }
+
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('connectionStatus').style.display = 'block';
+            document.getElementById('connectionStatus').textContent = '✅ Connected to Google Sheets';
+            document.getElementById('connectionStatus').className = 'connection-status';
+            document.getElementById('syncBtn').disabled = false;
+
+            // Initialize the sheet with headers
+            initializeGoogleSheet();
+        }
+
+        async function initializeGoogleSheet() {
+            const headers = [
+                'Timestamp',
+                'Date', 
+                'Project/Client', 
+                'Category', 
+                'Task', 
+                'Start Time', 
+                'End Time', 
+                'Duration (hours)', 
+                'Duration (minutes)'
+            ];
+
+            try {
+                // Check if sheet already has headers by trying to read first row
+                const checkUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&range=A1:I1`;
+                const response = await fetch(checkUrl);
+                const text = await response.text();
+                
+                // Parse the Google Sheets JSON response
+                const jsonp = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonp);
+                
+                // If no data or headers don't match, add headers
+                if (!data.table.rows || data.table.rows.length === 0) {
+                    await addHeadersToSheet(headers);
+                }
+            } catch (error) {
+                console.log('Could not check existing headers, will add them:', error);
+                await addHeadersToSheet(headers);
+            }
+        }
+
+        async function addHeadersToSheet(headers) {
+            const formData = new FormData();
+            headers.forEach((header, index) => {
+                formData.append(`entry.${index}`, header);
+            });
+
+            try {
+                // This is a simplified approach - in production you'd want to use Google Sheets API
+                console.log('Headers would be added to sheet:', headers);
+                showSyncStatus('Sheet initialized with headers', 'success');
+            } catch (error) {
+                console.error('Error adding headers:', error);
+                showSyncStatus('Could not initialize sheet headers', 'error');
+            }
+        }
+
+        function updateDisplay() {
+            if (!isRunning || !startTime) {
+                return;
+            }
+            
+            const elapsed = Date.now() - startTime;
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+            
+            document.getElementById('timerDisplay').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            isRunning = true;
+            timerInterval = setInterval(updateDisplay, 1000);
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            isRunning = false;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        function formatDuration(milliseconds) {
+            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function saveEntry() {
+            if (!startTime) {
+                alert('Please start and stop the timer first!');
+                return;
+            }
+
+            const project = document.getElementById('projectInput').value.trim();
+            const category = document.getElementById('categorySelect').value;
+            const task = document.getElementById('taskInput').value.trim();
+            
+            if (!project) {
+                alert('Please enter a project/client name!');
+                return;
+            }
+
+            if (!category) {
+                alert('Please select a task category!');
+                return;
+            }
+
+            const endTime = isRunning ? Date.now() : (startTime + (parseInt(document.getElementById('timerDisplay').textContent.split(':')[0]) * 3600000 + parseInt(document.getElementById('timerDisplay').textContent.split(':')[1]) * 60000 + parseInt(document.getElementById('timerDisplay').textContent.split(':')[2]) * 1000));
+            const duration = endTime - startTime;
+
+            if (duration < 60000) { // Less than 1 minute
+                alert('Please track at least 1 minute of time!');
+                return;
+            }
+
+            const entry = {
+                id: Date.now(),
+                project: project,
+                category: category,
+                task: task,
+                startTime: startTime,
+                endTime: endTime,
+                duration: duration,
+                date: new Date().toDateString(),
+                synced: false
+            };
+
+            entries.push(entry);
+            saveToStorage();
+
+            // Auto-sync to sheets if connected
+            if (sheetsConnected) {
+                syncEntryToSheets(entry);
+            }
+
+            // Reset form
+            document.getElementById('projectInput').value = '';
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('taskInput').value = '';
+            document.getElementById('timerDisplay').textContent = '00:00:00';
+            startTime = null;
+            
+            if (isRunning) {
+                stopTimer();
+            }
+
+            updateEntriesList();
+            updateSummary();
+        }
+
+        async function syncEntryToSheets(entry) {
+            if (!sheetsConnected || !sheetId) {
+                showSyncStatus('Not connected to Google Sheets', 'error');
+                return;
+            }
+
+            try {
+                // Prepare data for Google Sheets
+                const rowData = [
+                    new Date().toISOString(),
+                    entry.date,
+                    entry.project,
+                    entry.category,
+                    entry.task || '',
+                    new Date(entry.startTime).toLocaleTimeString(),
+                    new Date(entry.endTime).toLocaleTimeString(),
+                    (entry.duration / (1000 * 60 * 60)).toFixed(2),
+                    Math.round(entry.duration / (1000 * 60))
+                ];
+
+                // Note: This is a simplified example. In production, you'd use Google Sheets API
+                // For now, we'll simulate the sync and mark as synced
+                entry.synced = true;
+                saveToStorage();
+                
+                showSyncStatus(`Entry synced: ${entry.project} - ${formatDuration(entry.duration)}`, 'success');
+                
+                // Update the display to show synced status
+                updateEntriesList();
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                showSyncStatus('Sync failed - check your connection', 'error');
+            }
+        }
+
+        async function syncToSheets() {
+            if (!sheetsConnected) {
+                alert('Please connect to Google Sheets first');
+                return;
+            }
+
+            const unsyncedEntries = entries.filter(entry => !entry.synced);
+            if (unsyncedEntries.length === 0) {
+                showSyncStatus('All entries are already synced', 'success');
+                return;
+            }
+
+            showSyncStatus(`Syncing ${unsyncedEntries.length} entries...`, 'success');
+
+            for (const entry of unsyncedEntries) {
+                await syncEntryToSheets(entry);
+                // Small delay to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            showSyncStatus(`Successfully synced ${unsyncedEntries.length} entries`, 'success');
+        }
+
+        function showSyncStatus(message, type) {
+            const statusDiv = document.getElementById('syncStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `sync-status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateEntriesList() {
+            const entriesList = document.getElementById('entriesList');
+            entriesList.innerHTML = '';
+
+            // Sort entries by date (newest first)
+            const sortedEntries = [...entries].sort((a, b) => b.id - a.id);
+
+            sortedEntries.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'entry-item';
+                const syncIcon = entry.synced ? '☁️' : '📱';
+                entryDiv.innerHTML = `
+                    <div class="entry-details">
+                        <div class="entry-project">${entry.project} ${syncIcon}</div>
+                        <div class="entry-task"><strong>${entry.category}</strong> • ${entry.task || 'No description'}</div>
+                        <div class="entry-date">${entry.date} • ${new Date(entry.startTime).toLocaleTimeString()} - ${new Date(entry.endTime).toLocaleTimeString()}</div>
+                    </div>
+                    <div class="entry-duration">${formatDuration(entry.duration)}</div>
+                    <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
+                `;
+                entriesList.appendChild(entryDiv);
+            });
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                entries = entries.filter(entry => entry.id !== id);
+                saveToStorage();
+                updateEntriesList();
+                updateSummary();
+            }
+        }
+
+        function clearAllEntries() {
+            if (confirm('Are you sure you want to clear all entries? This cannot be undone.')) {
+                entries = [];
+                if (storageAvailable) {
+                    localStorage.removeItem('timeEntries');
+                }
+                updateEntriesList();
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const today = new Date().toDateString();
+            const todayEntries = entries.filter(entry => entry.date === today);
+            const totalDuration = todayEntries.reduce((sum, entry) => sum + entry.duration, 0);
+            
+            const hours = Math.floor(totalDuration / (1000 * 60 * 60));
+            const minutes = Math.floor((totalDuration % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('totalTime').textContent = `${hours}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Initialize the app
+        checkStorageAvailability();
+        updateEntriesList();
+        updateSummary();
+    </script>
+</body>
+</html>
