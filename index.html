@@ -157,39 +157,6 @@
             min-height: 100px;
         }
 
-        .setup-section {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-
-        .setup-section h3 {
-            color: #000000;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .setup-section ol {
-            margin-left: 20px;
-            margin-bottom: 20px;
-        }
-
-        .setup-section li {
-            margin-bottom: 8px;
-            line-height: 1.5;
-        }
-
-        .sync-status {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: 500;
-            text-align: center;
-            border: 1px solid #bbdefb;
-        }
-
         .entries-section {
             margin-top: 30px;
         }
@@ -210,23 +177,6 @@
             margin: 0;
             flex: 1;
             min-width: 120px;
-        }
-
-        .clear-all-btn {
-            background: #757575;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 14px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .clear-all-btn:hover {
-            background: #616161;
         }
 
         .entry-item {
@@ -284,6 +234,90 @@
 
         .delete-btn:hover {
             background: #d32f2f;
+        }
+
+        /* Collapsible section styles */
+        .collapsible-section {
+            margin-top: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.3s ease;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            color: #000000;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .collapsible-arrow {
+            font-size: 16px;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #ffffff;
+        }
+
+        .collapsible-content.open {
+            max-height: 2000px;
+        }
+
+        .collapsible-inner {
+            padding: 20px;
+        }
+
+        .setup-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 0;
+        }
+
+        .setup-section h3 {
+            color: #000000;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .setup-section ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setup-section li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .sync-status {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid #bbdefb;
         }
 
         /* Mobile optimizations */
@@ -348,12 +382,6 @@
                 margin-bottom: 0;
             }
             
-            .clear-all-btn {
-                align-self: center;
-                padding: 12px 24px;
-                font-size: 16px;
-            }
-            
             .entry-item {
                 flex-direction: column;
                 align-items: flex-start;
@@ -398,12 +426,20 @@
             
             .setup-section {
                 padding: 15px;
-                margin-bottom: 20px;
+                margin-bottom: 0;
             }
             
             .sync-status {
                 font-size: 14px;
                 padding: 12px;
+            }
+
+            .collapsible-header {
+                padding: 12px 15px;
+            }
+
+            .collapsible-inner {
+                padding: 15px;
             }
         }
     </style>
@@ -411,67 +447,6 @@
 <body>
     <div class="container">
         <h1>⏱️ Time Tracker</h1>
-
-        <div class="setup-section">
-            <h3>Google Sheets Integration</h3>
-            <p><strong>Easy Setup:</strong></p>
-            <ol>
-                <li>Create a new Google Sheet</li>
-                <li>Go to <strong>Extensions → Apps Script</strong> in your Google Sheet</li>
-                <li>Delete any existing code and paste this script:</li>
-            </ol>
-            
-            <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 6px; margin: 15px 0; font-family: monospace; font-size: 12px; overflow-x: auto;">
-function doPost(e) {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const data = JSON.parse(e.postData.contents);
-  
-  // Clear existing data
-  sheet.clear();
-  
-  // Add headers
-  const headers = ['Date', 'Category', 'Project/Client', 'Description', 'Duration'];
-  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  
-  // Add data
-  if (data.entries && data.entries.length > 0) {
-    const rows = data.entries.map(entry => [
-      new Date(entry.date).toLocaleString(),
-      entry.category,
-      entry.project,
-      entry.description || '',
-      entry.formattedDuration
-    ]);
-    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-  }
-  
-  return ContentService.createTextOutput('Success');
-}
-            </div>
-            
-            <ol start="4">
-                <li>Click <strong>Save</strong>, then <strong>Deploy → New Deployment</strong></li>
-                <li>Choose "Web app", set access to "Anyone", click <strong>Deploy</strong></li>
-                <li>Copy the <strong>Web app URL</strong> and paste it below</li>
-            </ol>
-            
-            <div class="sync-status" id="syncStatus">
-                Not connected to Google Sheets
-            </div>
-            
-            <div style="margin-top: 15px; margin-bottom: 15px;">
-                <input type="text" id="sheetUrlInput" placeholder="Paste your Google Apps Script Web app URL here" style="width: 70%; margin-right: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 4px;">
-                <button id="setupBtn" onclick="setupGoogleSheets()" style="background: #4caf50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Connect</button>
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <button id="unlinkBtn" onclick="unlinkGoogleSheets()" style="display: none; background: #f44336; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Unlink Sheets</button>
-            </div>
-            
-            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; font-size: 14px;">
-                <strong>✅ Note:</strong> This will automatically sync your time entries directly to your Google Sheet in real-time with no downloads or manual imports required.
-            </div>
-        </div>
 
         <div class="timer-section">
             <div class="timer-display" id="timerDisplay">00:00:00</div>
@@ -521,10 +496,81 @@ function doPost(e) {
         <div class="entries-section">
             <div class="entries-header">
                 <h2>Time entries</h2>
-                <button class="clear-all-btn" onclick="clearAllEntries()">Clear All</button>
             </div>
             <div class="entries-list" id="entriesList">
                 <!-- Entries will be populated here -->
+            </div>
+        </div>
+
+        <!-- Collapsible Google Sheets Integration Section -->
+        <div class="collapsible-section">
+            <div class="collapsible-header" onclick="toggleCollapsible()">
+                <h3>📊 Google Sheets Integration</h3>
+                <span class="collapsible-arrow" id="collapsibleArrow">▼</span>
+            </div>
+            <div class="collapsible-content" id="collapsibleContent">
+                <div class="collapsible-inner">
+                    <div class="setup-section">
+                        <h3>Google Sheets Integration</h3>
+                        <p><strong>Easy Setup:</strong></p>
+                        <ol>
+                            <li>Create a new Google Sheet</li>
+                            <li>Go to <strong>Extensions → Apps Script</strong> in your Google Sheet</li>
+                            <li>Delete any existing code and paste this script:</li>
+                        </ol>
+                        
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 6px; margin: 15px 0; font-family: monospace; font-size: 12px; overflow-x: auto;">
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const data = JSON.parse(e.postData.contents);
+  
+  // Clear existing data
+  sheet.clear();
+  
+  // Add headers
+  const headers = ['Date', 'Category', 'Project/Client', 'Description', 'Duration'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  // Add data
+  if (data.entries && data.entries.length > 0) {
+    const rows = data.entries.map(entry => [
+      new Date(entry.date).toLocaleString(),
+      entry.category,
+      entry.project,
+      entry.description || '',
+      entry.formattedDuration
+    ]);
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  
+  return ContentService.createTextOutput('Success');
+}
+                        </div>
+                        
+                        <ol start="4">
+                            <li>Click <strong>Save</strong>, then <strong>Deploy → New Deployment</strong></li>
+                            <li>Choose "Web app", set access to "Anyone", click <strong>Deploy</strong></li>
+                            <li>Copy the <strong>Web app URL</strong> and paste it below</li>
+                        </ol>
+                        
+                        <div class="sync-status" id="syncStatus">
+                            Not connected to Google Sheets
+                        </div>
+                        
+                        <div style="margin-top: 15px; margin-bottom: 15px;">
+                            <input type="text" id="sheetUrlInput" placeholder="Paste your Google Apps Script Web app URL here" style="width: 70%; margin-right: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 4px;">
+                            <button id="setupBtn" onclick="setupGoogleSheets()" style="background: #4caf50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Connect</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button id="unlinkBtn" onclick="unlinkGoogleSheets()" style="display: none; background: #f44336; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Unlink Sheets</button>
+                        </div>
+                        
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; font-size: 14px;">
+                            <strong>✅ Note:</strong> This will automatically sync your time entries directly to your Google Sheet in real-time with no downloads or manual imports required.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -744,125 +790,4 @@ function displayEntries() {
         html += '<button class="delete-btn" onclick="deleteEntry(' + entry.id + ')">Delete</button>';
         html += '</div>';
     }
-    entriesList.innerHTML = html;
-}
-
-function deleteEntry(id) {
-    let entries = JSON.parse(getItem('timeEntries') || '[]');
-    entries = entries.filter(function(entry) {
-        return entry.id !== id;
-    });
-    setItem('timeEntries', JSON.stringify(entries));
-    displayEntries();
-    syncToGoogleSheets();
-}
-
-function clearAllEntries() {
-    if (confirm('Are you sure you want to delete all time entries? This cannot be undone.')) {
-        removeItem('timeEntries');
-        displayEntries();
-        syncToGoogleSheets();
-    }
-}
-
-function setupGoogleSheets() {
-    const webAppUrl = document.getElementById('sheetUrlInput').value.trim();
-    if (!webAppUrl) {
-        alert('Please paste your Google Apps Script Web app URL first');
-        return;
-    }
-    
-    if (!webAppUrl.includes('script.google.com') || !webAppUrl.includes('/exec')) {
-        alert('Please make sure you paste the Web app URL (should contain script.google.com and end with /exec)');
-        return;
-    }
-    
-    // Store the web app URL without testing (testing often fails due to CORS)
-    setItem('googleWebAppUrl', webAppUrl);
-    
-    document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-    document.getElementById('setupBtn').style.display = 'none';
-    document.getElementById('unlinkBtn').style.display = 'inline-block';
-    document.getElementById('sheetUrlInput').style.display = 'none';
-    
-    alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet. Click "Sync to Sheets" to test it.');
-    
-    // Auto-sync existing entries if any
-    const entries = JSON.parse(getItem('timeEntries') || '[]');
-    if (entries.length > 0) {
-        syncToGoogleSheets();
-    }
-}
-
-function unlinkGoogleSheets() {
-    if (confirm('Are you sure you want to unlink Google Sheets? This will not delete your existing data.')) {
-        removeItem('googleWebAppUrl');
-        
-        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
-        document.getElementById('setupBtn').style.display = 'inline-block';
-        document.getElementById('unlinkBtn').style.display = 'none';
-        document.getElementById('sheetUrlInput').style.display = 'inline-block';
-        document.getElementById('sheetUrlInput').value = '';
-        
-        alert('Google Sheets has been unlinked. Your local data is still saved.');
-    }
-}
-
-function syncToGoogleSheets() {
-    const webAppUrl = getItem('googleWebAppUrl');
-    
-    if (!webAppUrl) {
-        alert('Please connect to Google Sheets first');
-        return;
-    }
-    
-    const entries = JSON.parse(getItem('timeEntries') || '[]');
-    if (entries.length === 0) {
-        alert('No entries to sync');
-        return;
-    }
-    
-    // Use fetch with proper JSON content type
-    fetch(webAppUrl, {
-        method: 'POST',
-        mode: 'no-cors', // This prevents CORS errors
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entries: entries
-        })
-    })
-    .then(function() {
-        // no-cors mode means we can't read the response, but that's OK
-        alert('✅ Data sent to Google Sheets! Check your sheet to verify ' + entries.length + ' entries were added.');
-    })
-    .catch(function(error) {
-        console.error('Sync failed:', error);
-        alert('❌ Sync failed: ' + error.message + '\n\nPlease check your Google Apps Script setup and try again.');
-    });
-}
-
-function checkGoogleSheetsStatus() {
-    const webAppUrl = getItem('googleWebAppUrl');
-    
-    if (webAppUrl) {
-        document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-        document.getElementById('setupBtn').style.display = 'none';
-        document.getElementById('unlinkBtn').style.display = 'inline-block';
-        document.getElementById('sheetUrlInput').style.display = 'none';
-    } else {
-        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
-        document.getElementById('setupBtn').style.display = 'inline-block';
-        document.getElementById('unlinkBtn').style.display = 'none';
-        document.getElementById('sheetUrlInput').style.display = 'inline-block';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    displayEntries();
-    checkGoogleSheetsStatus();
-});
-</script>
-</body>
-</html>
+    entriesList.innerHTML =
