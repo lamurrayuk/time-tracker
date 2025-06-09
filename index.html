@@ -62,6 +62,10 @@
       background: #2196f3;
       color: white;
     }
+    .btn-red {
+      background: #f44336;
+      color: white;
+    }
     .entries-list {
       margin-top: 20px;
     }
@@ -100,7 +104,9 @@
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
-      <button class="btn-green" onclick="saveManualEntry()">Save Manual Entry</button>
+      <button class="btn-green" onclick="startTimer()" id="startBtn">Start Timer</button>
+      <button class="btn-red" onclick="stopTimer()" id="stopBtn" style="display:none;">Stop Timer</button>
+      <button class="btn-blue" onclick="saveManualEntry()">Manual Entry</button>
     </div>
 
     <div class="form-group" style="margin-top: 30px;">
@@ -113,6 +119,8 @@
   </div>
 
 <script>
+let startTime = null;
+
 function saveWebAppUrl() {
   const url = document.getElementById('sheetUrlInput').value.trim();
   if (url && url.includes('script.google.com')) {
@@ -125,6 +133,47 @@ function saveWebAppUrl() {
 
 function getWebAppUrl() {
   return localStorage.getItem('googleWebAppUrl');
+}
+
+function startTimer() {
+  startTime = new Date();
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'inline-block';
+}
+
+function stopTimer() {
+  if (!startTime) return;
+  const duration = new Date() - startTime;
+  startTime = null;
+  document.getElementById('startBtn').style.display = 'inline-block';
+  document.getElementById('stopBtn').style.display = 'none';
+  saveTimedEntry(duration);
+}
+
+function saveTimedEntry(duration) {
+  const taskCategory = document.getElementById('taskCategory').value;
+  const projectClient = document.getElementById('projectClient').value;
+  const taskDescription = document.getElementById('taskDescription').value;
+
+  if (!projectClient.trim()) {
+    alert('Please enter a project or client name');
+    return;
+  }
+
+  const entry = {
+    category: taskCategory,
+    project: projectClient,
+    description: taskDescription,
+    duration: duration,
+    date: new Date().toISOString(),
+    formattedDuration: formatDuration(duration)
+  };
+
+  sendEntryToGoogleSheets(entry);
+  displayEntry(entry);
+
+  document.getElementById('projectClient').value = '';
+  document.getElementById('taskDescription').value = '';
 }
 
 function saveManualEntry() {
@@ -147,6 +196,7 @@ function saveManualEntry() {
   }
 
   const duration = hours * 60 * 60 * 1000;
+
   const entry = {
     category: taskCategory,
     project: projectClient,
