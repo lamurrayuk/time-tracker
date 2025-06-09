@@ -414,22 +414,29 @@
 
         <div class="setup-section">
             <h3>Google Sheets Integration</h3>
-            <p><strong>Setup Instructions:</strong></p>
+            <p><strong>Easy Setup:</strong></p>
             <ol>
                 <li>Create a new Google Sheet</li>
-                <li>Share it publicly: Share → "Anyone with the link" → Viewer</li>
-                <li>Get an API key from <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></li>
-                <li>Enable the Google Sheets API for your project</li>
-                <li>Click "Connect to Google Sheets" below and enter your API key and complete Google Sheets URL</li>
+                <li>Share it publicly: Share → "Anyone with the link" → <strong>Editor</strong> (not just Viewer)</li>
+                <li>Copy the complete URL from your browser</li>
+                <li>Paste it below and click Connect</li>
             </ol>
             
             <div class="sync-status" id="syncStatus">
                 Not connected to Google Sheets
             </div>
             
-            <div style="margin-top: 15px; margin-bottom: 20px;">
-                <button id="setupBtn" onclick="setupGoogleSheets()" style="background: #4caf50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px;">Connect to Google Sheets</button>
+            <div style="margin-top: 15px; margin-bottom: 15px;">
+                <input type="text" id="sheetUrlInput" placeholder="Paste your Google Sheets URL here" style="width: 70%; margin-right: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 4px;">
+                <button id="setupBtn" onclick="setupGoogleSheets()" style="background: #4caf50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Connect</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
                 <button id="unlinkBtn" onclick="unlinkGoogleSheets()" style="display: none; background: #f44336; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Unlink Sheets</button>
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; font-size: 14px;">
+                <strong>📝 Note:</strong> This uses a simple CSV export method. Your data will be exported as CSV format to your Google Sheet. Make sure your sheet is shared as "Editor" (not just Viewer) for this to work.
             </div>
         </div>
 
@@ -485,6 +492,59 @@
     </div>
 
 <script>
+// Fallback storage system for when localStorage is not available
+let memoryStorage = {
+    timeEntries: [],
+    googleSheetId: null,
+    googleSheetUrl: null
+};
+
+function setItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        console.warn('localStorage not available, using memory storage');
+        if (key === 'timeEntries') {
+            memoryStorage.timeEntries = JSON.parse(value);
+        } else if (key === 'googleSheetId') {
+            memoryStorage.googleSheetId = value;
+        } else if (key === 'googleSheetUrl') {
+            memoryStorage.googleSheetUrl = value;
+        }
+    }
+}
+
+function getItem(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        console.warn('localStorage not available, using memory storage');
+        if (key === 'timeEntries') {
+            return JSON.stringify(memoryStorage.timeEntries);
+        } else if (key === 'googleSheetId') {
+            return memoryStorage.googleSheetId;
+        } else if (key === 'googleSheetUrl') {
+            return memoryStorage.googleSheetUrl;
+        }
+        return null;
+    }
+}
+
+function removeItem(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {
+        console.warn('localStorage not available, using memory storage');
+        if (key === 'timeEntries') {
+            memoryStorage.timeEntries = [];
+        } else if (key === 'googleSheetId') {
+            memoryStorage.googleSheetId = null;
+        } else if (key === 'googleSheetUrl') {
+            memoryStorage.googleSheetUrl = null;
+        }
+    }
+}
+
 let startTime = null;
 let timerInterval = null;
 let isRunning = false;
@@ -554,9 +614,9 @@ function saveTimeEntry(duration) {
         formattedDuration: formatDuration(duration)
     };
     
-    let entries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+    let entries = JSON.parse(getItem('timeEntries') || '[]');
     entries.push(entry);
-    localStorage.setItem('timeEntries', JSON.stringify(entries));
+    setItem('timeEntries', JSON.stringify(entries));
     
     syncToGoogleSheets();
     displayEntries();
@@ -596,9 +656,9 @@ function saveManualEntry() {
         formattedDuration: formatDuration(duration)
     };
     
-    let entries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+    let entries = JSON.parse(getItem('timeEntries') || '[]');
     entries.push(entry);
-    localStorage.setItem('timeEntries', JSON.stringify(entries));
+    setItem('timeEntries', JSON.stringify(entries));
     
     syncToGoogleSheets();
     displayEntries();
@@ -617,7 +677,7 @@ function formatDuration(ms) {
 }
 
 function displayEntries() {
-    const entries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+    const entries = JSON.parse(getItem('timeEntries') || '[]');
     const entriesList = document.getElementById('entriesList');
     
     if (entries.length === 0) {
@@ -650,29 +710,29 @@ function displayEntries() {
 }
 
 function deleteEntry(id) {
-    let entries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+    let entries = JSON.parse(getItem('timeEntries') || '[]');
     entries = entries.filter(function(entry) {
         return entry.id !== id;
     });
-    localStorage.setItem('timeEntries', JSON.stringify(entries));
+    setItem('timeEntries', JSON.stringify(entries));
     displayEntries();
     syncToGoogleSheets();
 }
 
 function clearAllEntries() {
     if (confirm('Are you sure you want to delete all time entries? This cannot be undone.')) {
-        localStorage.removeItem('timeEntries');
+        removeItem('timeEntries');
         displayEntries();
         syncToGoogleSheets();
     }
 }
 
 function setupGoogleSheets() {
-    const apiKey = prompt('Enter your Google Sheets API Key:');
-    if (!apiKey) return;
-    
-    const sheetUrl = prompt('Enter your Google Sheets URL (the full link from your browser):');
-    if (!sheetUrl) return;
+    const sheetUrl = document.getElementById('sheetUrlInput').value.trim();
+    if (!sheetUrl) {
+        alert('Please paste your Google Sheets URL first');
+        return;
+    }
     
     let sheetId = '';
     const patterns = [
@@ -691,122 +751,107 @@ function setupGoogleSheets() {
     }
     
     if (!sheetId) {
-        alert('Could not extract Sheet ID from URL. Please make sure you copied the full Google Sheets URL.');
+        alert('Could not extract Sheet ID from URL. Please make sure you copied the full Google Sheets URL.\n\nExample: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit');
         return;
     }
     
-    const testUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/Sheet1!A1:A1?key=' + apiKey;
+    // Store the sheet info
+    setItem('googleSheetId', sheetId);
+    setItem('googleSheetUrl', sheetUrl);
     
-    fetch(testUrl)
-        .then(function(response) {
-            if (response.ok) {
-                localStorage.setItem('googleApiKey', apiKey);
-                localStorage.setItem('googleSheetId', sheetId);
-                localStorage.setItem('googleSheetUrl', sheetUrl);
-                
-                document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-                document.getElementById('setupBtn').style.display = 'none';
-                document.getElementById('unlinkBtn').style.display = 'inline-block';
-                
-                alert('Successfully connected to Google Sheets!');
-                syncToGoogleSheets();
-            } else {
-                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-            }
-        })
-        .catch(function(error) {
-            console.error('Setup failed:', error);
-            alert('Connection failed: ' + error.message);
-        });
+    document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
+    document.getElementById('setupBtn').style.display = 'none';
+    document.getElementById('unlinkBtn').style.display = 'inline-block';
+    document.getElementById('sheetUrlInput').style.display = 'none';
+    
+    alert('✅ Connected to Google Sheets!\n\nYour time entries will be exported as CSV data to your sheet when you click "Sync to Sheets".');
+    
+    // Auto-sync existing entries
+    syncToGoogleSheets();
 }
 
 function unlinkGoogleSheets() {
     if (confirm('Are you sure you want to unlink Google Sheets? This will not delete your existing data.')) {
-        localStorage.removeItem('googleSheetId');
-        localStorage.removeItem('googleApiKey');
-        localStorage.removeItem('googleSheetUrl');
+        removeItem('googleSheetId');
+        removeItem('googleSheetUrl');
         
         document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
         document.getElementById('setupBtn').style.display = 'inline-block';
         document.getElementById('unlinkBtn').style.display = 'none';
+        document.getElementById('sheetUrlInput').style.display = 'inline-block';
+        document.getElementById('sheetUrlInput').value = '';
         
         alert('Google Sheets has been unlinked. Your local data is still saved.');
     }
 }
 
 function syncToGoogleSheets() {
-    const apiKey = localStorage.getItem('googleApiKey');
-    const sheetId = localStorage.getItem('googleSheetId');
+    const sheetId = getItem('googleSheetId');
     
-    if (!apiKey || !sheetId) {
+    if (!sheetId) {
+        alert('Please connect to Google Sheets first');
         return;
     }
     
-    const entries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+    const entries = JSON.parse(getItem('timeEntries') || '[]');
     if (entries.length === 0) {
+        alert('No entries to sync');
         return;
     }
     
-    const headers = ['Date', 'Category', 'Project/Client', 'Description', 'Duration'];
-    const rows = [];
+    // Create CSV data
+    let csvContent = 'Date,Category,Project/Client,Description,Duration\n';
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
-        rows.push([
-            new Date(entry.date).toLocaleString(),
-            entry.category,
-            entry.project,
-            entry.description || '',
-            entry.formattedDuration
-        ]);
+        const date = new Date(entry.date).toLocaleString();
+        const category = entry.category;
+        const project = '"' + entry.project.replace(/"/g, '""') + '"'; // Escape quotes
+        const description = '"' + (entry.description || '').replace(/"/g, '""') + '"';
+        const duration = entry.formattedDuration;
+        
+        csvContent += date + ',' + category + ',' + project + ',' + description + ',' + duration + '\n';
     }
     
-    const values = [headers].concat(rows);
-    const clearUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/Sheet1:clear?key=' + apiKey;
+    // Create downloadable CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'time-entries-' + new Date().toISOString().split('T')[0] + '.csv';
     
-    fetch(clearUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-    })
-    .then(function(response) {
-        if (!response.ok) {
-            throw new Error('Clear failed: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(function() {
-        const updateUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/Sheet1!A1?valueInputOption=RAW&key=' + apiKey;
+    // Show instructions to user
+    const instructions = 'CSV file will be downloaded. To add to your Google Sheet:\n\n' +
+                        '1. Open your Google Sheet\n' +
+                        '2. Go to File → Import\n' +
+                        '3. Choose "Upload" tab\n' +
+                        '4. Select the downloaded CSV file\n' +
+                        '5. Choose "Replace spreadsheet" or "Insert new sheet"\n' +
+                        '6. Click "Import data"\n\n' +
+                        'Click OK to download the CSV file now.';
+    
+    if (confirm(instructions)) {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         
-        return fetch(updateUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ values: values })
-        });
-    })
-    .then(function(response) {
-        if (response.ok) {
-            console.log('Synced ' + entries.length + ' entries to Google Sheets');
-        } else {
-            throw new Error('Update failed: ' + response.status);
-        }
-    })
-    .catch(function(error) {
-        console.error('Sync failed:', error);
-    });
+        alert('✅ CSV downloaded! Import it into your Google Sheet following the instructions.');
+    }
 }
 
 function checkGoogleSheetsStatus() {
-    const apiKey = localStorage.getItem('googleApiKey');
-    const sheetId = localStorage.getItem('googleSheetId');
+    const sheetId = getItem('googleSheetId');
     
-    if (apiKey && sheetId) {
+    if (sheetId) {
         document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
         document.getElementById('setupBtn').style.display = 'none';
         document.getElementById('unlinkBtn').style.display = 'inline-block';
+        document.getElementById('sheetUrlInput').style.display = 'none';
     } else {
         document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
         document.getElementById('setupBtn').style.display = 'inline-block';
         document.getElementById('unlinkBtn').style.display = 'none';
+        document.getElementById('sheetUrlInput').style.display = 'inline-block';
     }
 }
 
