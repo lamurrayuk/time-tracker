@@ -638,87 +638,7 @@ function saveTimeEntry(duration) {
     const taskDescription = document.getElementById('taskDescription').value;
     
     if (!projectClient.trim()) {
-        alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet. Click "Sync to Sheets" to test it.');
-    
-    // Auto-sync existing entries if any
-    const entries = JSON.parse(getItem('timeEntries') || '[]');
-    if (entries.length > 0) {
-        syncToGoogleSheets();
-    }
-}
-
-function unlinkGoogleSheets() {
-    if (confirm('Are you sure you want to unlink Google Sheets? This will not delete your existing data.')) {
-        removeItem('googleWebAppUrl');
-        
-        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
-        document.getElementById('setupBtn').style.display = 'inline-block';
-        document.getElementById('unlinkBtn').style.display = 'none';
-        document.getElementById('sheetUrlInput').style.display = 'inline-block';
-        document.getElementById('sheetUrlInput').value = '';
-        
-        alert('Google Sheets has been unlinked. Your local data is still saved.');
-    }
-}
-
-function syncToGoogleSheets() {
-    const webAppUrl = getItem('googleWebAppUrl');
-    
-    if (!webAppUrl) {
-        alert('Please connect to Google Sheets first');
-        return;
-    }
-    
-    const entries = JSON.parse(getItem('timeEntries') || '[]');
-    if (entries.length === 0) {
-        alert('No entries to sync');
-        return;
-    }
-    
-    // Use fetch with proper JSON content type
-    fetch(webAppUrl, {
-        method: 'POST',
-        mode: 'no-cors', // This prevents CORS errors
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entries: entries
-        })
-    })
-    .then(function() {
-        // no-cors mode means we can't read the response, but that's OK
-        alert('✅ Data sent to Google Sheets! Check your sheet to verify ' + entries.length + ' entries were added.');
-    })
-    .catch(function(error) {
-        console.error('Sync failed:', error);
-        alert('❌ Sync failed: ' + error.message + '\n\nPlease check your Google Apps Script setup and try again.');
-    });
-}
-
-function checkGoogleSheetsStatus() {
-    const webAppUrl = getItem('googleWebAppUrl');
-    
-    if (webAppUrl) {
-        document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
-        document.getElementById('setupBtn').style.display = 'none';
-        document.getElementById('unlinkBtn').style.display = 'inline-block';
-        document.getElementById('sheetUrlInput').style.display = 'none';
-    } else {
-        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
-        document.getElementById('setupBtn').style.display = 'inline-block';
-        document.getElementById('unlinkBtn').style.display = 'none';
-        document.getElementById('sheetUrlInput').style.display = 'inline-block';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    displayEntries();
-    checkGoogleSheetsStatus();
-});
-</script>
-</body>
-</html>Please enter a project or client name');
+        alert('Please enter a project or client name');
         return;
     }
     
@@ -753,7 +673,7 @@ function saveManualEntry() {
         return;
     }
     
-    const durationInput = prompt('Enter duration in hours (e.g. 0.5, 1, 2.5, 8):');
+    const durationInput = prompt('Enter duration in minutes (e.g. 30, 60, 120):');
     if (!durationInput) return;
     
     const hours = parseFloat(durationInput);
@@ -865,4 +785,84 @@ function setupGoogleSheets() {
     document.getElementById('unlinkBtn').style.display = 'inline-block';
     document.getElementById('sheetUrlInput').style.display = 'none';
     
-    alert('
+    alert('✅ Connected to Google Sheets!\n\nYour time entries will now automatically sync to your sheet. Click "Sync to Sheets" to test it.');
+    
+    // Auto-sync existing entries if any
+    const entries = JSON.parse(getItem('timeEntries') || '[]');
+    if (entries.length > 0) {
+        syncToGoogleSheets();
+    }
+}
+
+function unlinkGoogleSheets() {
+    if (confirm('Are you sure you want to unlink Google Sheets? This will not delete your existing data.')) {
+        removeItem('googleWebAppUrl');
+        
+        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
+        document.getElementById('setupBtn').style.display = 'inline-block';
+        document.getElementById('unlinkBtn').style.display = 'none';
+        document.getElementById('sheetUrlInput').style.display = 'inline-block';
+        document.getElementById('sheetUrlInput').value = '';
+        
+        alert('Google Sheets has been unlinked. Your local data is still saved.');
+    }
+}
+
+function syncToGoogleSheets() {
+    const webAppUrl = getItem('googleWebAppUrl');
+    
+    if (!webAppUrl) {
+        alert('Please connect to Google Sheets first');
+        return;
+    }
+    
+    const entries = JSON.parse(getItem('timeEntries') || '[]');
+    if (entries.length === 0) {
+        alert('No entries to sync');
+        return;
+    }
+    
+    // Use fetch with proper JSON content type
+    fetch(webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors', // This prevents CORS errors
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            entries: entries
+        })
+    })
+    .then(function() {
+        // no-cors mode means we can't read the response, but that's OK
+        alert('✅ Data sent to Google Sheets! Check your sheet to verify ' + entries.length + ' entries were added.');
+    })
+    .catch(function(error) {
+        console.error('Sync failed:', error);
+        alert('❌ Sync failed: ' + error.message + '\n\nPlease check your Google Apps Script setup and try again.');
+    });
+}
+
+function checkGoogleSheetsStatus() {
+    const webAppUrl = getItem('googleWebAppUrl');
+    
+    if (webAppUrl) {
+        document.getElementById('syncStatus').textContent = 'Connected to Google Sheets ✅';
+        document.getElementById('setupBtn').style.display = 'none';
+        document.getElementById('unlinkBtn').style.display = 'inline-block';
+        document.getElementById('sheetUrlInput').style.display = 'none';
+    } else {
+        document.getElementById('syncStatus').textContent = 'Not connected to Google Sheets';
+        document.getElementById('setupBtn').style.display = 'inline-block';
+        document.getElementById('unlinkBtn').style.display = 'none';
+        document.getElementById('sheetUrlInput').style.display = 'inline-block';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    displayEntries();
+    checkGoogleSheetsStatus();
+});
+</script>
+</body>
+</html>
