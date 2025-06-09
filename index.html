@@ -147,61 +147,36 @@ function stopTimer() {
   startTime = null;
   document.getElementById('startBtn').style.display = 'inline-block';
   document.getElementById('stopBtn').style.display = 'none';
-  saveTimedEntry(duration);
-}
-
-function saveTimedEntry(duration) {
-  const taskCategory = document.getElementById('taskCategory').value;
-  const projectClient = document.getElementById('projectClient').value;
-  const taskDescription = document.getElementById('taskDescription').value;
-
-  if (!projectClient.trim()) {
-    alert('Please enter a project or client name');
-    return;
-  }
-
-  const entry = {
-    category: taskCategory,
-    project: projectClient,
-    description: taskDescription,
-    duration: duration,
-    date: new Date().toISOString(),
-    formattedDuration: formatDuration(duration)
-  };
-
-  sendEntryToGoogleSheets(entry);
-  displayEntry(entry);
-
-  document.getElementById('projectClient').value = '';
-  document.getElementById('taskDescription').value = '';
+  saveEntry(duration);
 }
 
 function saveManualEntry() {
-  const taskCategory = document.getElementById('taskCategory').value;
-  const projectClient = document.getElementById('projectClient').value;
-  const taskDescription = document.getElementById('taskDescription').value;
+  const durationInput = prompt('Enter duration in hours (e.g. 1.5):');
+  if (!durationInput) return;
+  const hours = parseFloat(durationInput);
+  if (isNaN(hours) || hours <= 0) {
+    alert('Invalid duration');
+    return;
+  }
+  const duration = hours * 60 * 60 * 1000;
+  saveEntry(duration);
+}
 
-  if (!projectClient.trim()) {
+function saveEntry(duration) {
+  const category = document.getElementById('taskCategory').value;
+  const project = document.getElementById('projectClient').value;
+  const description = document.getElementById('taskDescription').value;
+
+  if (!project.trim()) {
     alert('Please enter a project or client name');
     return;
   }
 
-  const durationInput = prompt('Enter duration in hours (e.g. 1, 1.5, 2):');
-  if (!durationInput) return;
-
-  const hours = parseFloat(durationInput);
-  if (isNaN(hours) || hours <= 0) {
-    alert('Please enter a valid number of hours');
-    return;
-  }
-
-  const duration = hours * 60 * 60 * 1000;
-
   const entry = {
-    category: taskCategory,
-    project: projectClient,
-    description: taskDescription,
-    duration: duration,
+    category,
+    project,
+    description,
+    duration,
     date: new Date().toISOString(),
     formattedDuration: formatDuration(duration)
   };
@@ -211,33 +186,27 @@ function saveManualEntry() {
 
   document.getElementById('projectClient').value = '';
   document.getElementById('taskDescription').value = '';
-  alert('Entry saved and sent!');
 }
 
 function formatDuration(ms) {
-  const hours = Math.floor(ms / 3600000);
-  const minutes = Math.floor((ms % 3600000) / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
-  return hours + 'h ' + minutes + 'm ' + seconds + 's';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${h}h ${m}m ${s}s`;
 }
 
 function sendEntryToGoogleSheets(entry) {
-  const webAppUrl = getWebAppUrl();
-  if (!webAppUrl) {
-    alert('Please connect to Google Sheets first');
+  const url = getWebAppUrl();
+  if (!url) {
+    alert('Web App URL not set. Please connect.');
     return;
   }
 
-  fetch(webAppUrl, {
+  fetch(url, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ entries: [entry] })
-  }).then(() => {
-    console.log('✅ Entry sent to Google Sheets');
-  }).catch(error => {
-    console.error('❌ Sync failed:', error);
-    alert('Sync failed: ' + error.message);
   });
 }
 
