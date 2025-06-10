@@ -8,163 +8,77 @@
   <meta name="apple-mobile-web-app-title" content="Time Tracker">
   <meta name="theme-color" content="#7CB342">
   
-  <!-- PWA Manifest with simpler, solid icon -->
+  <!-- PWA Manifest (SVG) -->
   <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;AlixPartners Time Tracker&quot;,&quot;short_name&quot;:&quot;Time Tracker&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23ffffff&quot;,&quot;theme_color&quot;:&quot;%237CB342&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%237CB342'/%3E%3Ccircle cx='96' cy='96' r='70' fill='white'/%3E%3Ccircle cx='96' cy='96' r='8' fill='%237CB342'/%3E%3Crect x='92' y='40' width='8' height='56' rx='4' fill='%237CB342'/%3E%3Crect x='70' y='92' width='40' height='8' rx='4' fill='%237CB342'/%3E%3C/svg%3E&quot;,&quot;sizes&quot;:&quot;192x192&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
   
   <!-- Standard favicon (PNG) -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   
-  <!-- Apple Touch Icon (PNG) for iOS Home Screen -->
+  <!-- Apple Touch Icon (PNG) -->
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
   
   <title>⏱️ Time Tracker | AlixPartners</title>
   <style>
     :root {
       --alix-green: #7CB342;
-      --alix-gray: #808080;
-      --alix-black: #000000;
-      --alix-white: #FFFFFF;
       --alix-light-gray: #F5F5F5;
-      --alix-success: #7CB342;
-      --alix-warning: #FF9800;
-      --alix-danger: #F44336;
-      --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-      --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-large: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-medium: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
     }
-
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0; padding: 15px;
-      background: linear-gradient(135deg, var(--alix-white) 0%, var(--alix-light-gray) 100%);
-      min-height: 100vh; color: var(--alix-black);
-      -webkit-text-size-adjust: 100%; user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, white, var(--alix-light-gray));
+      color: #000;
+      user-select: none;
     }
     input, textarea, select { user-select: text; }
     .container {
       max-width: 900px; margin: 0 auto;
-      background: var(--alix-white); padding: 25px;
-      border-radius: 16px; box-shadow: var(--shadow-large);
-      position: relative; overflow: hidden;
+      background: white; padding: 25px;
+      border-radius: 16px; box-shadow: var(--shadow-medium);
     }
-    .container::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      background: linear-gradient(90deg, var(--alix-green) 0%, var(--alix-gray) 100%);
-    }
-    h1 {
-      text-align: center; margin: 0 0 30px; font-size: 2rem; font-weight: 300; position: relative;
-    }
-    h1::after {
-      content: ''; position: absolute; bottom: -10px; left: 50%;
-      transform: translateX(-50%); width: 60px; height: 3px;
-      background: var(--alix-green); border-radius: 2px;
-    }
-
-    .form-section {
-      background: #FAFBFC; padding: 20px;
-      border-radius: 12px; margin-bottom: 25px;
-      border: 1px solid var(--alix-light-gray);
-    }
-
-    .form-row {
-      display: grid; grid-template-columns: 1fr; gap: 20px;
-      margin-bottom: 20px;
-    }
-    /* new: two-column row for start/end times */
-    .form-row.time-row {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .form-group {
-      display: flex; flex-direction: column;
-    }
-    label {
-      font-weight: 600; margin-bottom: 8px;
-      color: var(--alix-black); font-size: 0.9rem;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
+    h1 { text-align: center; margin-bottom: 30px; font-weight: 300; }
+    .form-section { background: #FAFBFC; padding: 20px; border-radius: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+    /* two-column row for start/end */
+    .form-row.time-row { grid-template-columns: 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-weight: 600; margin-bottom: 8px; text-transform: uppercase; font-size: 0.9rem; }
     input, select, textarea {
       padding: 16px; font-size: 16px;
       border: 2px solid var(--alix-light-gray); border-radius: 8px;
-      transition: all 0.3s ease; background: var(--alix-white);
-      color: var(--alix-black); width: 100%; appearance: none;
+      transition: border-color 0.3s; background: white;
     }
-    input:focus, select:focus, textarea:focus {
-      outline: none; border-color: var(--alix-green);
-      box-shadow: 0 0 0 3px rgba(124,179,66,0.1);
-      transform: translateY(-1px);
-    }
+    input:focus, select:focus, textarea:focus { border-color: var(--alix-green); }
     textarea { resize: vertical; min-height: 100px; }
-
     .button-group {
-      display: grid; grid-template-columns: 1fr; gap: 12px;
-      margin: 25px 0;
+      display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;
     }
-    button {
-      padding: 16px 24px; font-size: 16px; font-weight: 600;
-      border: none; border-radius: 8px; cursor: pointer;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      position: relative; overflow: hidden;
-      transition: all 0.3s ease; width: 100%;
-    }
-    button::before {
-      content: ''; position: absolute; top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.5s;
-    }
-    button:hover::before { left: 100%; }
-
     .btn-primary {
-      background: linear-gradient(135deg, var(--alix-green) 0%, #689F38 100%);
-      color: white; box-shadow: var(--shadow-medium);
+      background: var(--alix-green); color: white;
+      padding: 16px 24px; border: none; border-radius: 8px;
+      cursor: pointer; text-transform: uppercase; font-weight: 600;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-large); }
-
-    .btn-secondary {
-      background: linear-gradient(135deg, var(--alix-gray) 0%, var(--alix-black) 100%);
-      color: white; box-shadow: var(--shadow-medium);
-    }
-    .btn-secondary:hover { transform: translateY(-2px); box-shadow: var(--shadow-large); }
-
-    .btn-warning {
-      background: linear-gradient(135deg, var(--alix-warning) 0%, #D97706 100%);
-      color: white; box-shadow: var(--shadow-medium);
-    }
-    .btn-warning:hover { transform: translateY(-2px); box-shadow: var(--shadow-large); }
-
-    .btn-danger {
-      background: linear-gradient(135deg, var(--alix-danger) 0%, #DC2626 100%);
-      color: white; box-shadow: var(--shadow-medium);
-    }
-    .btn-danger:hover { transform: translateY(-2px); box-shadow: var(--shadow-large); }
-
-    /* … rest of your existing CSS (connection-section, entries-section, media queries, animations) unchanged … */
+    .btn-primary:hover { box-shadow: var(--shadow-medium); }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>⏱️ Time Tracker</h1>
-
     <div class="form-section">
-      <!-- Category & Project / Client -->
+      <!-- Category & Project -->
       <div class="form-row">
         <div class="form-group">
           <label for="taskCategory">Task Category</label>
           <select id="taskCategory">
-            <option value="Project Work - Billable">Project Work - Billable</option>
-            <option value="Business Development">Business Development</option>
-            <option disabled>――――――――――</option>
-            <option value="Admin - Time & Expenses">Admin - Time & Expenses</option>
-            <option value="Mentoring">Mentoring</option>
-            <option value="Performance Partner Conversations">Performance Partner Conversations</option>
-            <option value="Practice Development">Practice Development</option>
-            <option value="Project Work - Non-Billable">Project Work - Non-Billable</option>
-            <option value="Recruitment">Recruitment</option>
-            <option value="Training">Training</option>
-            <option value="Travel Planning">Travel Planning</option>
-            <option value="Travel Time">Travel Time</option>
+            <option>Project Work - Billable</option>
+            <option>Business Development</option>
+            <option disabled>──────────</option>
+            <option>Admin - Time &amp; Expenses</option>
+            <option>Mentoring</option>
+            <option>Practice Development</option>
+            <option>Travel Time</option>
           </select>
         </div>
         <div class="form-group">
@@ -173,7 +87,15 @@
         </div>
       </div>
 
-      <!-- Side-by-side Start & End Time -->
+      <!-- Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="entryDate">Date</label>
+          <input type="date" id="entryDate">
+        </div>
+      </div>
+
+      <!-- Start & End Time -->
       <div class="form-row time-row">
         <div class="form-group">
           <label for="startTime">Start Time</label>
@@ -186,33 +108,46 @@
       </div>
 
       <!-- Description -->
-      <div class="form-group">
-        <label for="taskDescription">Task Description</label>
-        <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="taskDescription">Task Description</label>
+          <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
+        </div>
       </div>
 
-      <!-- Buttons / Timer Controls -->
+      <!-- Single Submit Button -->
       <div class="button-group">
-        <button class="btn-primary" onclick="startTimer()" id="startBtn">Start Timer</button>
-        <button class="btn-secondary" onclick="saveManualEntry()">Manual Entry</button>
-      </div>
-
-      <div class="timer-display-container" id="timerDisplayContainer">
-        <div class="timer-label">Timer Running</div>
-        <div class="timer-display" id="timerDisplay">00:00:00</div>
-      </div>
-
-      <div class="timer-controls" id="timerControls">
-        <button class="btn-warning" onclick="pauseTimer()" id="pauseBtn">Pause</button>
-        <button class="btn-danger" onclick="stopTimer()" id="stopBtn">Stop & Save</button>
+        <button class="btn-primary" onclick="saveTimeEntry()">Save Entry</button>
       </div>
     </div>
-
-    <!-- connection-section and entries-section unchanged … -->
   </div>
 
   <script>
-    // (Your existing JS—startTimer, pauseTimer, stopTimer, manual entry, connection logic—remains the same)
+    // Initialize default date/time
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      document.getElementById('entryDate').value = now.toISOString().split('T')[0];
+      const t = now.toTimeString().substr(0,5);
+      document.getElementById('startTime').value = t;
+      document.getElementById('endTime').value = new Date(now.getTime()+3600000)
+        .toTimeString().substr(0,5);
+    });
+
+    function saveTimeEntry() {
+      const project = document.getElementById('projectClient').value.trim();
+      if (!project) return alert('Please enter a project or client name');
+      const date = document.getElementById('entryDate').value;
+      const start = document.getElementById('startTime').value;
+      const end = document.getElementById('endTime').value;
+      if (!date || !start || !end) return alert('Please fill out date, start and end times');
+      const startDT = new Date(`${date}T${start}`);
+      const endDT   = new Date(`${date}T${end}`);
+      if (endDT <= startDT) return alert('End time must be after start time');
+      const ms = endDT - startDT;
+      const h = (ms/3600000).toFixed(2);
+      alert(`Saved:\nProject: ${project}\n${date} ${start}–${end}\n${h} hours`);
+      // …send to Sheets, display in UI, etc.…
+    }
   </script>
 </body>
 </html>
