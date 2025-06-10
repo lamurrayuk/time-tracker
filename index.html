@@ -52,12 +52,15 @@
     input:focus, select:focus, textarea:focus { border-color: var(--alix-green); }
     textarea { resize: vertical; min-height: 100px; }
 
-    .button-group {
-      display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;
+    /* button inside form-group */
+    .form-group button {
+      margin-top: 12px;
+      align-self: flex-start;
     }
+
     .btn-primary {
       background: var(--alix-green); color: white;
-      padding: 16px 24px; border: none; border-radius: 8px;
+      padding: 12px 20px; border: none; border-radius: 8px;
       cursor: pointer; text-transform: uppercase; font-weight: 600;
     }
     .btn-primary:hover { box-shadow: var(--shadow-medium); }
@@ -84,7 +87,7 @@
     <h1>⏱️ Time Tracker</h1>
 
     <div class="form-section">
-      <!-- 1) Category, 2) Project/Client, 3) Description all stacked -->
+      <!-- Task Category, Project/Client, Description stacked -->
       <div class="form-row">
         <div class="form-group">
           <label for="taskCategory">Task Category</label>
@@ -121,22 +124,18 @@
         </div>
       </div>
 
-      <!-- Start & End time side-by-side -->
+      <!-- Start & End time side-by-side, each with its own button -->
       <div class="form-row time-row">
         <div class="form-group">
           <label for="startTime">Start Time</label>
           <input type="time" id="startTime">
+          <button class="btn-primary" onclick="saveTimeEntry()">Save Entry</button>
         </div>
         <div class="form-group">
           <label for="endTime">End Time</label>
           <input type="time" id="endTime">
+          <button class="btn-primary" onclick="manualEntry()">Manual Entry</button>
         </div>
-      </div>
-
-      <!-- Buttons -->
-      <div class="button-group">
-        <button class="btn-primary" onclick="saveTimeEntry()">Save Entry</button>
-        <button class="btn-primary" onclick="manualEntry()">Manual Entry</button>
       </div>
     </div>
 
@@ -146,7 +145,7 @@
         <label for="sheetUrlInput">Google Sheets Web App URL</label>
         <input type="url" id="sheetUrlInput" placeholder="Paste your Web App URL">
       </div>
-      <div class="button-group">
+      <div class="form-group">
         <button class="btn-primary" onclick="saveWebAppUrl()">Connect</button>
       </div>
       <div id="connectionStatus" class="status disconnected">Not connected</div>
