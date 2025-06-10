@@ -745,8 +745,14 @@ function getWebAppUrl() {
 function updateTimerDisplay() {
   if (!startTime) return;
   
-  const now = new Date();
-  const elapsed = isPaused ? pausedTime : (now - startTime - pausedTime);
+  let elapsed;
+  if (isPaused) {
+    // If paused, show the time when pause was hit
+    elapsed = pausedTime - startTime;
+  } else {
+    // If running, show current elapsed time
+    elapsed = new Date() - startTime;
+  }
   
   const hours = Math.floor(elapsed / 3600000);
   const minutes = Math.floor((elapsed % 3600000) / 60000);
@@ -772,15 +778,15 @@ function startTimer() {
 
 function pauseTimer() {
   if (isPaused) {
-    // Resume
-    const pauseDuration = new Date() - new Date(pausedTime);
-    pausedTime += pauseDuration;
+    // Resume - adjust the start time to account for the pause duration
+    const pauseDuration = new Date() - pausedTime;
+    startTime = new Date(startTime.getTime() + pauseDuration);
     isPaused = false;
     document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('pauseBtn').className = 'btn-warning';
   } else {
-    // Pause
-    pausedTime = new Date() - startTime - pausedTime;
+    // Pause - store the current time
+    pausedTime = new Date();
     isPaused = true;
     document.getElementById('pauseBtn').textContent = 'Resume';
     document.getElementById('pauseBtn').className = 'btn-primary';
