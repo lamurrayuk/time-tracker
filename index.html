@@ -70,34 +70,61 @@
     }
     .btn-primary:hover { box-shadow: var(--shadow-medium); }
 
-    .connection-section {
-      background: #FAFBFC; padding: 16px; margin-top: 30px;
-      border: 1px solid var(--alix-light-gray); border-radius: 12px;
+    /* Details summary style */
+    details {
+      margin-top: 30px;
+      border: 1px solid var(--alix-light-gray);
+      border-radius: 12px;
+      background: #FAFBFC;
+      padding: 0 16px 16px;
     }
-    .connection-section .form-group { margin-bottom: 12px; }
-    .connection-section label { font-weight: 600; margin-bottom: 6px; text-transform: uppercase; font-size: 0.9rem; }
-    .connection-section input {
-      padding: 12px; font-size: 14px; width: 100%;
-      border: 2px solid var(--alix-light-gray); border-radius: 8px;
-      transition: border-color 0.3s;
+    details > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--alix-light-gray);
+      user-select: none;
     }
-    .connection-section input:focus { border-color: var(--alix-green); }
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
+    details[open] > summary::after {
+      content: "–";
+      float: right;
+    }
+    details:not([open]) > summary::after {
+      content: "+";
+      float: right;
+    }
 
-    /* Connect row: button right, status centered */
+    .connection-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .connection-inner input {
+      padding: 12px; font-size: 14px;
+      border: 2px solid var(--alix-light-gray);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+      width: 100%;
+    }
+    .connection-inner input:focus {
+      border-color: var(--alix-green);
+    }
     .connection-actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .connection-actions > .status {
+    .connection-actions .status {
       flex: 1;
       text-align: center;
+      font-size: 0.9rem;
     }
-    .connection-actions > button {
-      flex: 0 0 auto;
-    }
-
-    .status { font-size: 0.9rem; }
     .status.connected { color: green; }
     .status.disconnected { color: red; }
   </style>
@@ -159,17 +186,16 @@
       </div>
     </div>
 
-    <!-- Google Sheets connector -->
-    <div class="connection-section">
-      <div class="form-group">
-        <label for="sheetUrlInput">Google Sheets Web App URL</label>
+    <details>
+      <summary>Google Sheets Connector</summary>
+      <div class="connection-inner">
         <input type="url" id="sheetUrlInput" placeholder="Paste your Web App URL">
+        <div class="connection-actions">
+          <span id="connectionStatus" class="status disconnected">Not connected</span>
+          <button class="btn-primary" onclick="saveWebAppUrl()">Connect</button>
+        </div>
       </div>
-      <div class="connection-actions">
-        <span id="connectionStatus" class="status disconnected">Not connected</span>
-        <button class="btn-primary" onclick="saveWebAppUrl()">Connect</button>
-      </div>
-    </div>
+    </details>
   </div>
 
   <script>
