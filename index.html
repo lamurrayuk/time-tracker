@@ -730,6 +730,14 @@ function saveEntry(duration) {
     formattedDuration: formatDuration(duration)
   };
 
+  // Debug alerts to see what we're creating
+  alert('DEBUG: Entry created with:\n' + 
+        'Category: ' + entry.category + '\n' +
+        'Project: ' + entry.project + '\n' + 
+        'Description: ' + entry.description + '\n' +
+        'Duration: ' + entry.duration + '\n' +
+        'Date: ' + entry.date);
+
   sendEntryToGoogleSheets(entry);
   displayEntry(entry);
 
@@ -751,11 +759,30 @@ function sendEntryToGoogleSheets(entry) {
     return;
   }
 
+  // Debug: Log what we're sending
+  console.log('Sending entry to Google Sheets:', entry);
+  console.log('Entry structure:', {
+    category: entry.category,
+    project: entry.project,
+    description: entry.description,
+    duration: entry.duration,
+    date: entry.date
+  });
+
+  const payload = { entries: [entry] };
+  console.log('Full payload:', JSON.stringify(payload, null, 2));
+
   fetch(url, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entries: [entry] })
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    console.log('Data sent successfully');
+  })
+  .catch(error => {
+    console.error('Error sending data:', error);
   });
 }
 
