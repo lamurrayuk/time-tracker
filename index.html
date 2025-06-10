@@ -41,7 +41,7 @@
 
     /* form section */
     .form-section { background: #FAFBFC; padding: 20px; border-radius: 12px; }
-    .form-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
     .form-row.time-row { grid-template-columns: 1fr 1fr; }
     .form-group { display: flex; flex-direction: column; }
     label { font-weight: 600; margin-bottom: 8px; text-transform: uppercase; font-size: 0.9rem; }
@@ -91,7 +91,8 @@
 
     <!-- Time entry form -->
     <div class="form-section">
-      <!-- Category & Project -->
+
+      <!-- Category, Project & Description together -->
       <div class="form-row">
         <div class="form-group">
           <label for="taskCategory">Task Category</label>
@@ -110,9 +111,15 @@
             <option>Travel Time</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="projectClient">Project/Client</label>
-          <input type="text" id="projectClient" placeholder="Enter project or client name">
+        <div>
+          <div class="form-group">
+            <label for="projectClient">Project/Client</label>
+            <input type="text" id="projectClient" placeholder="Enter project or client name">
+          </div>
+          <div class="form-group">
+            <label for="taskDescription">Task Description</label>
+            <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
+          </div>
         </div>
       </div>
 
@@ -133,14 +140,6 @@
         <div class="form-group">
           <label for="endTime">End Time</label>
           <input type="time" id="endTime">
-        </div>
-      </div>
-
-      <!-- Description -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="taskDescription">Task Description</label>
-          <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
         </div>
       </div>
 
@@ -247,8 +246,8 @@
       const duration = hours * 3600000;
       const entry = {
         date: new Date(`${date}T00:00`).toISOString(),
-        startTime: '',
-        endTime: '',
+        startTime: "",
+        endTime: "",
         category: document.getElementById('taskCategory').value,
         project,
         description: document.getElementById('taskDescription').value,
