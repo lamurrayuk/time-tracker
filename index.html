@@ -20,6 +20,10 @@
       --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
       --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       --shadow-large: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      .timer-controls {
+        display: flex;
+        gap: 12px;
+      }
     }
 
     * {
@@ -152,6 +156,46 @@
       grid-template-columns: 1fr;
       gap: 12px;
       margin: 25px 0;
+    }
+
+    .timer-display-container {
+      text-align: center;
+      margin: 20px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--alix-green) 0%, #689F38 100%);
+      border-radius: 12px;
+      color: white;
+      display: none;
+    }
+
+    .timer-display {
+      font-size: 2.5rem;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .timer-label {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .timer-controls {
+      display: none;
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--alix-warning) 0%, #D97706 100%);
+      color: white;
+      box-shadow: var(--shadow-medium);
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-large);
     }
 
     button {
@@ -579,8 +623,17 @@
 
       <div class="button-group">
         <button class="btn-primary" onclick="startTimer()" id="startBtn">Start Timer</button>
-        <button class="btn-danger" onclick="stopTimer()" id="stopBtn" style="display:none;">Stop Timer</button>
         <button class="btn-secondary" onclick="saveManualEntry()">Manual Entry</button>
+      </div>
+
+      <div class="timer-display-container" id="timerDisplayContainer">
+        <div class="timer-label">Timer Running</div>
+        <div class="timer-display" id="timerDisplay">00:00:00</div>
+      </div>
+
+      <div class="timer-controls" id="timerControls">
+        <button class="btn-warning" onclick="pauseTimer()" id="pauseBtn">Pause</button>
+        <button class="btn-danger" onclick="stopTimer()" id="stopBtn">Stop & Save</button>
       </div>
     </div>
 
@@ -615,7 +668,10 @@
 
 <script>
 let startTime = null;
+let pausedTime = 0; // Track paused duration
 let isConnectionExpanded = false;
+let timerInterval = null;
+let isPaused = false;
 
 // Initialize connection status on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -684,18 +740,69 @@ function getWebAppUrl() {
   return localStorage.getItem('googleWebAppUrl');
 }
 
+function updateTimerDisplay() {
+  if (!startTime) return;
+  
+  const now = new Date();
+  const elapsed = isPaused ? pausedTime : (now - startTime - pausedTime);
+  
+  const hours = Math.floor(elapsed / 3600000);
+  const minutes = Math.floor((elapsed % 3600000) / 60000);
+  const seconds = Math.floor((elapsed % 60000) / 1000);
+  
+  const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  document.getElementById('timerDisplay').textContent = display;
+}
+
 function startTimer() {
   startTime = new Date();
+  pausedTime = 0;
+  isPaused = false;
+  
   document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'inline-block';
+  document.getElementById('timerControls').style.display = 'flex';
+  document.getElementById('timerDisplayContainer').style.display = 'block';
+  
+  // Update timer display every second
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+  updateTimerDisplay();
+}
+
+function pauseTimer() {
+  if (isPaused) {
+    // Resume
+    const pauseDuration = new Date() - new Date(pausedTime);
+    pausedTime += pauseDuration;
+    isPaused = false;
+    document.getElementById('pauseBtn').textContent = 'Pause';
+    document.getElementById('pauseBtn').className = 'btn-warning';
+  } else {
+    // Pause
+    pausedTime = new Date() - startTime - pausedTime;
+    isPaused = true;
+    document.getElementById('pauseBtn').textContent = 'Resume';
+    document.getElementById('pauseBtn').className = 'btn-primary';
+  }
 }
 
 function stopTimer() {
   if (!startTime) return;
-  const duration = new Date() - startTime;
+  
+  const duration = isPaused ? pausedTime : (new Date() - startTime - pausedTime);
+  
+  // Reset timer state
   startTime = null;
+  pausedTime = 0;
+  isPaused = false;
+  clearInterval(timerInterval);
+  
+  // Reset UI
   document.getElementById('startBtn').style.display = 'inline-block';
-  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('timerControls').style.display = 'none';
+  document.getElementById('timerDisplayContainer').style.display = 'none';
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('pauseBtn').className = 'btn-warning';
+  
   saveEntry(duration);
 }
 
@@ -730,14 +837,6 @@ function saveEntry(duration) {
     formattedDuration: formatDuration(duration)
   };
 
-  // Debug alerts to see what we're creating
-  alert('DEBUG: Entry created with:\n' + 
-        'Category: ' + entry.category + '\n' +
-        'Project: ' + entry.project + '\n' + 
-        'Description: ' + entry.description + '\n' +
-        'Duration: ' + entry.duration + '\n' +
-        'Date: ' + entry.date);
-
   sendEntryToGoogleSheets(entry);
   displayEntry(entry);
 
@@ -759,30 +858,11 @@ function sendEntryToGoogleSheets(entry) {
     return;
   }
 
-  // Debug: Log what we're sending
-  console.log('Sending entry to Google Sheets:', entry);
-  console.log('Entry structure:', {
-    category: entry.category,
-    project: entry.project,
-    description: entry.description,
-    duration: entry.duration,
-    date: entry.date
-  });
-
-  const payload = { entries: [entry] };
-  console.log('Full payload:', JSON.stringify(payload, null, 2));
-
   fetch(url, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(() => {
-    console.log('Data sent successfully');
-  })
-  .catch(error => {
-    console.error('Error sending data:', error);
+    body: JSON.stringify({ entries: [entry] })
   });
 }
 
