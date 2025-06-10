@@ -45,6 +45,7 @@
     .form-group { display: flex; flex-direction: column; }
     label { font-weight: 600; margin-bottom: 8px; text-transform: uppercase; font-size: 0.9rem; }
     input, select, textarea {
+      width: 100%;
       padding: 16px; font-size: 16px;
       border: 2px solid var(--alix-light-gray); border-radius: 8px;
       transition: border-color 0.3s; background: white;
@@ -52,15 +53,19 @@
     input:focus, select:focus, textarea:focus { border-color: var(--alix-green); }
     textarea { resize: vertical; min-height: 100px; }
 
-    /* button inside form-group */
-    .form-group button {
+    /* Time‐row buttons: same width, centered */
+    .time-row .form-group {
+      align-items: center;
+    }
+    .time-row .form-group button {
       margin-top: 12px;
-      align-self: flex-start;
+      width: 80%;
+      max-width: 200px;
     }
 
     .btn-primary {
       background: var(--alix-green); color: white;
-      padding: 12px 20px; border: none; border-radius: 8px;
+      padding: 12px 0; border: none; border-radius: 8px;
       cursor: pointer; text-transform: uppercase; font-weight: 600;
     }
     .btn-primary:hover { box-shadow: var(--shadow-medium); }
@@ -77,7 +82,22 @@
       transition: border-color 0.3s;
     }
     .connection-section input:focus { border-color: var(--alix-green); }
-    .status { margin-top: 8px; font-size: 0.9rem; }
+
+    /* Connect row: button right, status centered */
+    .connection-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .connection-actions > .status {
+      flex: 1;
+      text-align: center;
+    }
+    .connection-actions > button {
+      flex: 0 0 auto;
+    }
+
+    .status { font-size: 0.9rem; }
     .status.connected { color: green; }
     .status.disconnected { color: red; }
   </style>
@@ -87,7 +107,7 @@
     <h1>⏱️ Time Tracker</h1>
 
     <div class="form-section">
-      <!-- Task Category, Project/Client, Description stacked -->
+      <!-- 1) Category, 2) Project/Client, 3) Description stacked -->
       <div class="form-row">
         <div class="form-group">
           <label for="taskCategory">Task Category</label>
@@ -124,7 +144,7 @@
         </div>
       </div>
 
-      <!-- Start & End time side-by-side, each with its own button -->
+      <!-- Start & End time side-by-side, buttons centered under each -->
       <div class="form-row time-row">
         <div class="form-group">
           <label for="startTime">Start Time</label>
@@ -145,10 +165,10 @@
         <label for="sheetUrlInput">Google Sheets Web App URL</label>
         <input type="url" id="sheetUrlInput" placeholder="Paste your Web App URL">
       </div>
-      <div class="form-group">
+      <div class="connection-actions">
+        <span id="connectionStatus" class="status disconnected">Not connected</span>
         <button class="btn-primary" onclick="saveWebAppUrl()">Connect</button>
       </div>
-      <div id="connectionStatus" class="status disconnected">Not connected</div>
     </div>
   </div>
 
@@ -215,8 +235,7 @@
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({entries:[entry]})
       });
-      const hours = (duration/3600000).toFixed(2);
-      alert(`✅ Entry saved\n${project}\n${date} ${start}-${end}\n${hours} h`);
+      alert(`✅ Entry saved\n${project}\n${date} ${start}-${end}\n${(duration/3600000).toFixed(2)} h`);
       document.getElementById('projectClient').value = '';
       document.getElementById('taskDescription').value = '';
     }
@@ -229,7 +248,7 @@
       const date = document.getElementById('entryDate').value;
       if (!date) return alert('Please select a date');
       let hours = prompt('Enter time spent in hours (e.g. 1.5 for 1h30m):');
-      if (hours === null) return; // cancelled
+      if (hours === null) return;
       hours = parseFloat(hours);
       if (isNaN(hours) || hours <= 0) return alert('Please enter a valid number of hours');
       const duration = hours * 3600000;
