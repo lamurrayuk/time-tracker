@@ -101,7 +101,12 @@
             <option disabled>──────────</option>
             <option>Admin - Time &amp; Expenses</option>
             <option>Mentoring</option>
+            <option>Performance Partner Conversations</option>
             <option>Practice Development</option>
+            <option>Project Work - Non-Billable</option>
+            <option>Recruitment</option>
+            <option>Training</option>
+            <option>Travel Planning</option>
             <option>Travel Time</option>
           </select>
         </div>
@@ -210,7 +215,7 @@
       const entry = {
         date: startDT.toISOString(),
         startTime: start,
-        endTime: end,  // FIXED: Added endTime to the entry object
+        endTime: end,
         category: document.getElementById('taskCategory').value,
         project,
         description: document.getElementById('taskDescription').value,
