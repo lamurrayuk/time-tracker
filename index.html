@@ -144,9 +144,10 @@
         </div>
       </div>
 
-      <!-- Submit -->
+      <!-- Submit Buttons -->
       <div class="button-group">
         <button class="btn-primary" onclick="saveTimeEntry()">Save Entry</button>
+        <button class="btn-primary" onclick="manualEntry()">Manual Entry</button>
       </div>
     </div>
 
@@ -207,7 +208,7 @@
       const date = document.getElementById('entryDate').value;
       const start = document.getElementById('startTime').value;
       const end = document.getElementById('endTime').value;
-      if (!date||!start||!end) return alert('Fill out date, start and end times');
+      if (!date || !start || !end) return alert('Fill out date, start and end times');
       const startDT = new Date(`${date}T${start}`);
       const endDT = new Date(`${date}T${end}`);
       if (endDT <= startDT) return alert('End time must be after start time');
@@ -228,6 +229,37 @@
       });
       const hours = (duration/3600000).toFixed(2);
       alert(`✅ Entry saved\n${project}\n${date} ${start}-${end}\n${hours} h`);
+      document.getElementById('projectClient').value = '';
+      document.getElementById('taskDescription').value = '';
+    }
+
+    function manualEntry() {
+      const url = localStorage.getItem('googleWebAppUrl');
+      if (!url) return alert('Please connect your Google Sheets Web App URL first.');
+      const project = document.getElementById('projectClient').value.trim();
+      if (!project) return alert('Please enter a project or client name');
+      const date = document.getElementById('entryDate').value;
+      if (!date) return alert('Please select a date');
+      let hours = prompt('Enter time spent in hours (e.g. 1.5 for 1h30m):');
+      if (hours === null) return; // cancelled
+      hours = parseFloat(hours);
+      if (isNaN(hours) || hours <= 0) return alert('Please enter a valid number of hours');
+      const duration = hours * 3600000;
+      const entry = {
+        date: new Date(`${date}T00:00`).toISOString(),
+        startTime: '',
+        endTime: '',
+        category: document.getElementById('taskCategory').value,
+        project,
+        description: document.getElementById('taskDescription').value,
+        duration
+      };
+      fetch(url, {
+        method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({entries:[entry]})
+      });
+      alert(`✅ Manual entry saved\n${project}\n${date}\n${hours.toFixed(2)} h`);
       document.getElementById('projectClient').value = '';
       document.getElementById('taskDescription').value = '';
     }
