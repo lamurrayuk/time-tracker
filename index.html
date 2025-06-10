@@ -210,6 +210,7 @@
       const entry = {
         date: startDT.toISOString(),
         startTime: start,
+        endTime: end,  // FIXED: Added endTime to the entry object
         category: document.getElementById('taskCategory').value,
         project,
         description: document.getElementById('taskDescription').value,
