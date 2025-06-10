@@ -796,7 +796,14 @@ function pauseTimer() {
 function stopTimer() {
   if (!startTime) return;
   
-  const duration = isPaused ? pausedTime : (new Date() - startTime - pausedTime);
+  let duration;
+  if (isPaused) {
+    // If stopped while paused, use the pause time
+    duration = pausedTime - startTime;
+  } else {
+    // If stopped while running, use current time
+    duration = new Date() - startTime;
+  }
   
   // Reset timer state
   startTime = null;
