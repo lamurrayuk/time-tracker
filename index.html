@@ -7,16 +7,16 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Time Tracker">
   <meta name="theme-color" content="#7CB342">
-  
-  <!-- PWA Manifest (SVG) -->
+
+  <!-- PWA Manifest (inline SVG icon) -->
   <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;AlixPartners Time Tracker&quot;,&quot;short_name&quot;:&quot;Time Tracker&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23ffffff&quot;,&quot;theme_color&quot;:&quot;%237CB342&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%237CB342'/%3E%3Ccircle cx='96' cy='96' r='70' fill='white'/%3E%3Ccircle cx='96' cy='96' r='8' fill='%237CB342'/%3E%3Crect x='92' y='40' width='8' height='56' rx='4' fill='%237CB342'/%3E%3Crect x='70' y='92' width='40' height='8' rx='4' fill='%237CB342'/%3E%3C/svg%3E&quot;,&quot;sizes&quot;:&quot;192x192&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
-  
-  <!-- Standard favicon (PNG) -->
+
+  <!-- Standard favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-  
-  <!-- Apple Touch Icon (PNG) -->
+
+  <!-- Apple Touch Icon for “Add to Home Screen” -->
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
-  
+
   <title>⏱️ Time Tracker | AlixPartners</title>
   <style>
     :root {
@@ -39,9 +39,8 @@
     }
     h1 { text-align: center; margin-bottom: 30px; font-weight: 300; }
 
-    /* form section */
     .form-section { background: #FAFBFC; padding: 20px; border-radius: 12px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
     .form-row.time-row { grid-template-columns: 1fr 1fr; }
     .form-group { display: flex; flex-direction: column; }
     label { font-weight: 600; margin-bottom: 8px; text-transform: uppercase; font-size: 0.9rem; }
@@ -63,24 +62,19 @@
     }
     .btn-primary:hover { box-shadow: var(--shadow-medium); }
 
-    /* connection section */
     .connection-section {
       background: #FAFBFC; padding: 16px; margin-top: 30px;
       border: 1px solid var(--alix-light-gray); border-radius: 12px;
     }
     .connection-section .form-group { margin-bottom: 12px; }
-    .connection-section label {
-      font-weight: 600; margin-bottom: 6px; text-transform: uppercase; font-size: 0.9rem;
-    }
+    .connection-section label { font-weight: 600; margin-bottom: 6px; text-transform: uppercase; font-size: 0.9rem; }
     .connection-section input {
-      padding: 12px; font-size: 14px;
-      width: 100%; border: 2px solid var(--alix-light-gray); border-radius: 8px;
+      padding: 12px; font-size: 14px; width: 100%;
+      border: 2px solid var(--alix-light-gray); border-radius: 8px;
       transition: border-color 0.3s;
     }
     .connection-section input:focus { border-color: var(--alix-green); }
-    .connection-section .status {
-      margin-top: 8px; font-size: 0.9rem;
-    }
+    .status { margin-top: 8px; font-size: 0.9rem; }
     .status.connected { color: green; }
     .status.disconnected { color: red; }
   </style>
@@ -89,10 +83,8 @@
   <div class="container">
     <h1>⏱️ Time Tracker</h1>
 
-    <!-- Time entry form -->
     <div class="form-section">
-
-      <!-- Category, Project & Description together -->
+      <!-- 1) Category, 2) Project/Client, 3) Description all stacked -->
       <div class="form-row">
         <div class="form-group">
           <label for="taskCategory">Task Category</label>
@@ -111,19 +103,17 @@
             <option>Travel Time</option>
           </select>
         </div>
-        <div>
-          <div class="form-group">
-            <label for="projectClient">Project/Client</label>
-            <input type="text" id="projectClient" placeholder="Enter project or client name">
-          </div>
-          <div class="form-group">
-            <label for="taskDescription">Task Description</label>
-            <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
-          </div>
+        <div class="form-group">
+          <label for="projectClient">Project/Client</label>
+          <input type="text" id="projectClient" placeholder="Enter project or client name">
+        </div>
+        <div class="form-group">
+          <label for="taskDescription">Task Description</label>
+          <textarea id="taskDescription" placeholder="Describe your task..."></textarea>
         </div>
       </div>
 
-      <!-- Date -->
+      <!-- Date full-width -->
       <div class="form-row">
         <div class="form-group">
           <label for="entryDate">Date</label>
@@ -131,7 +121,7 @@
         </div>
       </div>
 
-      <!-- Start & End Time -->
+      <!-- Start & End time side-by-side -->
       <div class="form-row time-row">
         <div class="form-group">
           <label for="startTime">Start Time</label>
@@ -143,14 +133,14 @@
         </div>
       </div>
 
-      <!-- Submit Buttons -->
+      <!-- Buttons -->
       <div class="button-group">
         <button class="btn-primary" onclick="saveTimeEntry()">Save Entry</button>
         <button class="btn-primary" onclick="manualEntry()">Manual Entry</button>
       </div>
     </div>
 
-    <!-- Connect to Google Sheets Web App -->
+    <!-- Google Sheets connector -->
     <div class="connection-section">
       <div class="form-group">
         <label for="sheetUrlInput">Google Sheets Web App URL</label>
