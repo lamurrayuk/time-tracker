@@ -21,7 +21,8 @@
       --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       --shadow-large: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
       .timer-controls {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 12px;
       }
     }
@@ -183,6 +184,7 @@
 
     .timer-controls {
       display: none;
+      grid-template-columns: 1fr;
       gap: 12px;
       margin: 25px 0;
     }
@@ -760,7 +762,7 @@ function startTimer() {
   isPaused = false;
   
   document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('timerControls').style.display = 'flex';
+  document.getElementById('timerControls').style.display = 'grid';
   document.getElementById('timerDisplayContainer').style.display = 'block';
   
   // Update timer display every second
